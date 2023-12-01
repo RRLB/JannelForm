@@ -1,0 +1,115 @@
+.appPage {
+  
+  min-height: 100vh;
+}
+.logoContainer{
+  display: flex;
+  justify-content: flex-start;
+}
+.logo {
+  margin: 2em;
+  width: 20%;
+
+}
+.App {
+  text-align: left;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+}
+
+nav {
+  display: flex;
+  flex-direction: column; 
+  align-items: flex-start;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column; 
+}
+
+nav ul li {
+  margin-bottom: 10px;
+  padding-left: 0.3vh;
+  
+}
+
+@media all and (max-width: 1280px){
+  .Form {
+    margin-top: 40%;
+    padding-left: 2px;
+  }
+}
+@media (min-width: 320px) and (max-width: 780px){
+  .Form {
+    margin-top: 20%;
+    padding-left: 1.5px;
+  }
+}
+@media (max-width: 320px){
+  .Form {
+    margin-top: 5%;
+    padding-left: 1px;
+  }
+}
+.Form {
+  font-size: calc(8px + 1vmin);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin : 0 20%;
+  margin-top: 5%;
+  margin-bottom: 20%;
+  
+}
+h1 {
+  text-align: center;
+  color: rgb(26, 112, 111);
+  text-transform: uppercase;
+  margin-bottom: calc(10px + 4vmin);
+}
+h2 {
+  text-align: left;
+  
+}
+ul {
+  list-style-type: none;
+  color: rgb(0, 0, 12);
+  font-size: 20px;
+}
+a:-webkit-any-link {
+  color: rgb(240, 240, 245);
+  font-size: 18px;
+  text-decoration: none; /* Remove underline from links */ 
+}
+
+label {
+  margin-top: 10px;
+}
+
+input,
+select,
+textarea {
+
+  width: 80%;
+  padding: 5px;
+  margin: 5px 0;
+  background-color: white;
+  border-width: 1px;
+  border-color: gray;
+  
+}
+.btn-group {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+
