@@ -6,7 +6,7 @@ import axios from 'axios';
 import { Link, useNavigate} from 'react-router-dom';
 
 
-const FormClient = () => {
+const FormClient = ({ onFormSubmissionSuccess }) => {
   // Define state variables for each form field
   const [formData, setFormData] = useState({
     // client: 'client',
@@ -20,12 +20,15 @@ const FormClient = () => {
     email: '',
     profession: '',
     observations: '',
-    compagnie: '', // Default company value
-    numero_contrat: '',
-    type_contrat: [], 
+    formLines: [],
     
   });
-  
+  const [formLines, setFormLines] = useState([]);
+  const [newLine, setNewLine] = useState({
+    compagnie: '',
+    numero_contrat: '',
+    type_contrat: '',
+  });
 
   // Log all query parameters
   //These are both the same
@@ -36,29 +39,27 @@ const FormClient = () => {
   //This is the JS function //run with this code in useEffect hook: queryParameters.forEach((value, key) => {console.log(`${key}: ${value}`);
   //Then return : let custom_t1 = queryParameters.get('custom_t1');
   const queryParameters = new URLSearchParams(window.location.search);
-  console.log(queryParameters); //returns values
+  // console.log(queryParameters); //returns values
   let ResId = queryParameters.get('resId');
-  console.log(ResId);
+  // console.log(ResId);
+
   //Set initial input values from params
   const setInitialInputValues = (queryParameters) => {
     
-    setFormData({
-      nom: queryParameters.get('custom_t1') || '',
-      prenom: queryParameters.get('custom_t4') || '',
-      date_naissance: queryParameters.get('custom_d3') || '',
-      adresse: queryParameters.get('custom_t2') || '',
-      code_postal: queryParameters.get('custom_t3') || '',
-      ville: queryParameters.get('custom_t6') || '',
-      telephone: queryParameters.get('custom_t7') || '',
-      email: queryParameters.get('custom_t8') || '',
-      profession: queryParameters.get('custom_t9') || '',
-      observations: queryParameters.get('custom_t10') || '',
-      compagnie: [queryParameters.get('custom_n7')?.toLowerCase()] || '',//optional chaining if not null
-      type_contrat: (queryParameters.get('custom_n6')?.split(',') || []) 
-      .filter((value) => value.trim() !== '')
-      .map((value) => value.toLowerCase()) || '',
-      numero_contrat: queryParameters.get('custom_t5') || ''
-    });
+    setFormData((prevData) => ({
+        ...prevData,
+        nom: queryParameters.get('custom_t1') || '',
+        prenom: queryParameters.get('custom_t4') || '',
+        date_naissance: queryParameters.get('custom_d3') || '',
+        adresse: queryParameters.get('custom_t2') || '',
+        code_postal: queryParameters.get('custom_t3') || '',
+        ville: queryParameters.get('custom_t6') || '',
+        telephone: queryParameters.get('custom_t7') || '',
+        email: queryParameters.get('custom_t8') || '',
+        profession: queryParameters.get('custom_t9') || '',
+        observations: queryParameters.get('custom_t10') || '',
+        formLines: [], // Initialize formLines as an empty array
+    }));
   };
   // useEffect to call setInitialInputValues on component mount and when searchParams changes
   useEffect(() => {
@@ -67,7 +68,6 @@ const FormClient = () => {
       console.log(`${key}: ${value}`);
     });
   }, []);
-  console.log(formData);
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -76,38 +76,61 @@ const FormClient = () => {
   };
 
    // Handle select change for company
-   const handleSelectChangeOne = (e) => {
+  const handleSelectChangeOne = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setNewLine((prevLine) => ({ ...prevLine, [name]: value }));
   };
-  // Handle select change for multiple selec
-  const handleSelectChangeMultiple = (e) => {
-    const { name, value } = e.target;
-    //creates a new array selectedOptions -> contains the selected values from the dropdown
-    const selectedOptions = [...e.target.options]
-      .filter(o => o.selected)
-      .map(o => o.value);//filters elements that are == selected // map creates new array based on the selected options
-   
-    //updates formData => contains array of the selected options
-    setFormData({ ...formData, [name]: selectedOptions }); 
+
+  const handleAddLine = () => {
+    // Create a new line using the current state of newLine
+    const lineToAdd = {
+      compagnie: newLine.compagnie,
+      numero_contrat: newLine.numero_contrat,
+      type_contrat: newLine.type_contrat,
+    };
+    
+    // Update formLines in formData using the callback function
+    setFormData((prevData) => {
+      const updatedFormLines = [...prevData.formLines, lineToAdd];
+      console.log(updatedFormLines); // Log the updated formLines
+      return {
+        ...prevData,
+        formLines: updatedFormLines,
+      };
+    });
+    // Use setFormLines to update the formLines state
+    setFormLines((prevLines) => [...prevLines, newLine]);
+  
+    // Clear the newLine state for the next line
+    setNewLine({
+      compagnie: '',
+      numero_contrat: '',
+      type_contrat: '',
+    });
+  
   };
+
   // Handle submit change
   const handleSubmit = async () => {
-  axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
-  formData, { crossdomain: true, headers: {'Form': 'Client', 'ResId': ResId } })
+    axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
+    formData, { crossdomain: true, headers: {'Form': 'Client', 'ResId': ResId } })
     .then(res=>{
       console.log(res);
       console.log(res.data);
-  })
+      //send response to editForm.js
+      if (onFormSubmissionSuccess) {
+        onFormSubmissionSuccess();
+      }
+    })
   };
 
   //Navigate to homepage
-const navigate = useNavigate();
-const handleOnClickClose = async () => {
-  const handleForm = await handleSubmit()
-  //redirect to homepage
-  navigate('/');
-}
+  const navigate = useNavigate();
+  const handleOnClickClose = async () => {
+    const handleForm = await handleSubmit()
+    //redirect to homepage
+    navigate('/');
+  }
       
 return (
 
@@ -237,60 +260,91 @@ return (
             ></textarea>
           </div>
 
-          <h2 >Contrats</h2>
-          <div className="form-group col-sm-12 col-md-6">
-            <label className="col-form-label">Sélectionner une compagnie</label>
+          <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
+          <div className="contract  col-sm-12 col-md-4">
+            <label className="col-control-label">Compagnie</label>
             <select
               name="compagnie"
-              value={formData.compagnie}
-              onChange={handleSelectChangeOne}
-              multiple="" 
-              className="form-select" 
-              id="exampleSelect2"
-            >
-              <option value=""></option>
-              <option value="axa">AXA</option>
-              <option value="sampo">SAMPO</option>
-            </select>
-            <label className="col-form-label">Numéro de contrat</label>
-            <input
-              className="form-control" placeholder="numéro de contrat" id="inputDefault"
               type="text"
-              name="numero_contrat"
-              value={formData.numero_contrat}
-              onChange={handleInputChange}
+              value={newLine.compagnie}
+
+              onChange={handleSelectChangeOne}
+              className="form-select" 
+              id="exampleSelect1"
+            >
+            <option value=""></option>
+            <option value="axa">AXA</option>
+            <option value="sampo">SAMPO</option>
+            </select>
+          </div>
+
+          <div className=" contract col-sm-12 col-md-4">
+            <label className="col-form-label">Numéro de contrat</label> 
+            <input 
+              className="form-control" placeholder="numéro de contrat" id="inputDefault"
+              type='text' 
+              name='numero_contrat'
+              value={newLine.numero_contrat}
+
+              onChange={handleSelectChangeOne}
             />
           </div>
 
-          <div className="form-group col-sm-12 col-md-6">
-            <label className="col-form-label">Sélectionner multiple avec Ctrl</label>
-            <select
+          <div className=" contract col-sm-12 col-md-4">
+            <label className="col-control-label">Type de contrat</label>
+            <select 
               name="type_contrat"
-              type="select-multiple"
-              value={formData.type_contrat}
-              onChange={handleSelectChangeMultiple}
-              multiple={true} 
-              className="form-select" 
+              type="text"
+              // value={formLines.type_contrat}
+              value={newLine.type_contrat}
+
+              onChange={handleSelectChangeOne} 
+              className="form-select"
               id="exampleSelect2"
             >
-              
-              <option value="mrh">MRH</option>
-              <option value="mri">MRI</option>
-              <option value="rc">RC</option>
-              <option value="auto">Auto</option>
-              <option value="gav">GAV</option>
-              <option value="sante">Santé</option>
-              <option value="pj">PJ</option>
-              <option value="chasse">Chasse</option>
-              <option value="vie">Vie</option>
-              <option value="retraite">Retraite</option>
-              <option value="scolaire">Scolaire</option>
+            <option value=""></option>
+            <option value="mrh">MRH</option>
+            <option value="mri">MRI</option>
+            <option value="rc">RC</option>
+            <option value="auto">Auto</option>
+            <option value="gav">GAV</option>
+            <option value="sante">Santé</option>
+            <option value="pj">PJ</option>
+            <option value="chasse">Chasse</option>
+            <option value="vie">Vie</option>
+            <option value="retraite">Retraite</option>
+            <option value="scolaire">Scolaire</option>
             </select>
           </div>
 
-          <div className="form-group col-sm-12 col-md-6 ">
-            
+          <div className='contract addNew'>
+            <button onClick={handleAddLine} className="btn btn-light" type="submit">Rajouté</button>
           </div>
+
+          <div className='formLines'>
+          
+            {formLines.length > 0 && (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Compagnie</th>
+                    <th scope="col">Numéro de contrat</th>
+                    <th scope="col">Type de contrat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formLines.map((line, index) => (
+                    <tr key={index}>
+                      <td>{line.compagnie.toUpperCase()}</td>
+                      <td>{line.numero_contrat.toUpperCase()}</td>
+                      <td>{line.type_contrat.toUpperCase()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          
         </div>
         <div className="btn-group ">
           <div >

@@ -35,6 +35,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   
   let ResId = queryParameters.get('resId');
   // console.log(ResId);
+  
   //Set initial input values from params
   const setInitialInputValues = (queryParameters) => {
     
@@ -48,10 +49,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
       numero_siret: queryParameters.get('numero_siret') || '',
       formLines: [], // Initialize formLines as an empty array
     }));
-      // compagnie: (queryParameters.get('custom_n7')?.split(',') || []).filter((value) => value.trim() !== '').map((value) => value.toLowerCase()) || '',
-      // type_contrat: (queryParameters.get('custom_n6')?.split(',') || []).filter((value) => value.trim() !== '').map((value) => value.toLowerCase()) || '',
-      // numero_contrat: (queryParameters.get('custom_t5')?.split(',') || []).filter((value) => value.trim() !== '').map((value) => value.toLowerCase()) || '',
-    
+      
   };
 
   // useEffect to call setInitialInputValues on component mount and when searchParams changes
@@ -62,12 +60,12 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     });
   }, []);
   
-  
   // Handle input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
+
   // Handle select change for company
 const handleSelectChangeOne = (e) => {
   const { name, value } = e.target;
@@ -103,45 +101,30 @@ const handleAddLine = () => {
   });
 
 };
-  
-  // // Handle select change for multiple selec
-  // const handleSelectChangeMultiple = (e) => {
-  //   const { name, value } = e.target;
-  //   //creates a new array selectedOptions -> contains the selected values from the dropdown
-  //   const selectedOptions = [...e.target.options].filter(o => o.selected).map(o => o.value);
-  //   //filters elements that are == selected // map creates new array based on the selected options
-
-  //   //updates formData => contains array of the selected options
-  //   setFormData({ ...formData, [name]: selectedOptions }); 
-  // };
-  
+ 
   // Handle submit change
   const handleSubmit = async () => {
-    // console.log(formData);
-      axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", formData, { crossdomain: true, headers: {'Form': 'Entreprise', 'ResId': ResId} })
+      // console.log(formData);
+      axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
+      formData, { crossdomain: true, headers: {'Form': 'Entreprise', 'ResId': ResId} })
       .then(res=>{
         console.log(res);
         console.log(res.data);
         //send response to editForm.js
-      if (onFormSubmissionSuccess) {
-        onFormSubmissionSuccess();
-      }
+        if (onFormSubmissionSuccess) {
+          onFormSubmissionSuccess();
+        }
         // window.location = "/" ;//This line of code will redirect you once the submission is succeessful
-    })
-      // onFormSubmit(formData);
+      })
     };
 
+    //Navigate to homepage
     const navigate = useNavigate();
-
     const handleOnClickClose = async () => {
       const handleForm = await handleSubmit()
-      // console.log(handleForm);
       //redirect to homepage
       navigate('/');
-      // window.close(); //not working as can only close window that was opened by the script
-      //Redirect to armoire Jannel
-      // window.location.replace('https://armoires.zeendoc.com/jannel/Ihm/index.php?Coll_Id=coll_1');
-    }
+  }
 
   return (
     <div className="Form form-group"> 
