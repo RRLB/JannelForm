@@ -1,4 +1,3 @@
-
 import './App.css';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
@@ -14,12 +13,15 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     email: '',
     telephone: '',
     numero_siret: '',
-    compagnie: '',
-    numero_contrat: '',
-    type_contrat: [],
+    formLines: [],
     
   });
-
+  const [formLines, setFormLines] = useState([]);
+  const [newLine, setNewLine] = useState({
+    compagnie: '',
+    numero_contrat: '',
+    type_contrat: '',
+  });
   // Log all query parameters
   //These are both the same
   //This uses React hook which has the below function built in. it returns an object of params
@@ -29,26 +31,27 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   //This is the JS function //run with this code in useEffect hook: queryParameters.forEach((value, key) => {console.log(`${key}: ${value}`);
   //Then return : let custom_t1 = queryParameters.get('custom_t1');
   const queryParameters = new URLSearchParams(window.location.search);
-  console.log(queryParameters); //returns values
+  // console.log(queryParameters); //returns values
   
   let ResId = queryParameters.get('resId');
-  console.log(ResId);
+  // console.log(ResId);
   //Set initial input values from params
-  const setInitialInputValues = (queryParams) => {
+  const setInitialInputValues = (queryParameters) => {
     
-    setFormData({
-      nom_societe: queryParams.get('nom_societe') || '',
-      nom_gerant: queryParams.get('nom_gerant') || '',
-      adresse: queryParams.get('custom_t2') || '',
-      email: queryParams.get('custom_t8') || '',
-      telephone: queryParams.get('custom_t7') || '',
-      numero_siret: queryParams.get('numero_siret') || '',
-      compagnie: [queryParameters.get('custom_n7')?.toLowerCase()] || '',//optional chaining if not null
-      type_contrat: (queryParameters.get('custom_n6')?.split(',') || []) //if null sets to empty array
-      .filter((value) => value.trim() !== '')
-      .map((value) => value.toLowerCase()) || '',
-      numero_contrat: queryParams.get('custom_t5') || ''
-    });
+    setFormData((prevData) => ({
+      ...prevData,
+      nom_societe: queryParameters.get('nom_societe') || '',
+      nom_gerant: queryParameters.get('nom_gerant') || '',
+      adresse: queryParameters.get('custom_t2') || '',
+      email: queryParameters.get('custom_t8') || '',
+      telephone: queryParameters.get('custom_t7') || '',
+      numero_siret: queryParameters.get('numero_siret') || '',
+      formLines: [], // Initialize formLines as an empty array
+    }));
+      // compagnie: (queryParameters.get('custom_n7')?.split(',') || []).filter((value) => value.trim() !== '').map((value) => value.toLowerCase()) || '',
+      // type_contrat: (queryParameters.get('custom_n6')?.split(',') || []).filter((value) => value.trim() !== '').map((value) => value.toLowerCase()) || '',
+      // numero_contrat: (queryParameters.get('custom_t5')?.split(',') || []).filter((value) => value.trim() !== '').map((value) => value.toLowerCase()) || '',
+    
   };
 
   // useEffect to call setInitialInputValues on component mount and when searchParams changes
@@ -58,7 +61,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
       console.log(`${key}: ${value}`);
     });
   }, []);
-  console.log(formData);
+  
   
   // Handle input change
   const handleInputChange = (e) => {
@@ -66,24 +69,55 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     setFormData({ ...formData, [name]: value });
   };
   // Handle select change for company
-  const handleSelectChangeOne = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-  // Handle select change for multiple selec
-  const handleSelectChangeMultiple = (e) => {
-    const { name, value } = e.target;
-    //creates a new array selectedOptions -> contains the selected values from the dropdown
-    const selectedOptions = [...e.target.options].filter(o => o.selected).map(o => o.value);
-    //filters elements that are == selected // map creates new array based on the selected options
+const handleSelectChangeOne = (e) => {
+  const { name, value } = e.target;
+  setNewLine((prevLine) => ({ ...prevLine, [name]: value }));
+};
 
-    //updates formData => contains array of the selected options
-    setFormData({ ...formData, [name]: selectedOptions }); 
+const handleAddLine = () => {
+  
+  // Create a new line using the current state of newLine
+  const lineToAdd = {
+    compagnie: newLine.compagnie,
+    numero_contrat: newLine.numero_contrat,
+    type_contrat: newLine.type_contrat,
   };
+  
+  // Update formLines in formData using the callback function
+  setFormData((prevData) => {
+    const updatedFormLines = [...prevData.formLines, lineToAdd];
+    console.log(updatedFormLines); // Log the updated formLines
+    return {
+      ...prevData,
+      formLines: updatedFormLines,
+    };
+  });
+  // Use setFormLines to update the formLines state
+  setFormLines((prevLines) => [...prevLines, newLine]);
+
+  // Clear the newLine state for the next line
+  setNewLine({
+    compagnie: '',
+    numero_contrat: '',
+    type_contrat: '',
+  });
+
+};
+  
+  // // Handle select change for multiple selec
+  // const handleSelectChangeMultiple = (e) => {
+  //   const { name, value } = e.target;
+  //   //creates a new array selectedOptions -> contains the selected values from the dropdown
+  //   const selectedOptions = [...e.target.options].filter(o => o.selected).map(o => o.value);
+  //   //filters elements that are == selected // map creates new array based on the selected options
+
+  //   //updates formData => contains array of the selected options
+  //   setFormData({ ...formData, [name]: selectedOptions }); 
+  // };
   
   // Handle submit change
   const handleSubmit = async () => {
-    
+    // console.log(formData);
       axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", formData, { crossdomain: true, headers: {'Form': 'Entreprise', 'ResId': ResId} })
       .then(res=>{
         console.log(res);
@@ -120,7 +154,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
             <label className="col-form-label">Nom société</label> 
               <input 
-                className="form-control" placeholder="nom société" id="inputDefault"
+                className="mainInfo form-control" placeholder="nom société" id="inputDefault"
                 type='text' 
                 name='nom_societe'
                 value={formData.nom_societe} 
@@ -131,7 +165,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
             <label className="col-form-label">Nom du gérant</label> 
               <input 
-                className="form-control" placeholder="nom du gérant" id="inputDefault"
+                className="mainInfo form-control" placeholder="nom du gérant" id="inputDefault"
                 type='text' 
                 name='nom_gerant'
                 value={formData.nom_gerant} 
@@ -142,7 +176,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
             <label className="col-form-label">Adresse</label> 
               <input 
-                className="form-control" placeholder="adresse" id="inputDefault"
+                className="mainInfo form-control" placeholder="adresse" id="inputDefault"
                 type='text' 
                 name='adresse'
                 value={formData.adresse} 
@@ -153,7 +187,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
             <label className="col-form-label">Email</label>  
               <input 
-              className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="email"
+              className="mainInfo form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="email"
                 type='email' 
                 name='email'
                 value={formData.email} 
@@ -164,7 +198,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
             <label className="col-form-label">Téléphone</label> 
               <input 
-                className="form-control" placeholder="téléphone" id="inputDefault"
+                className="mainInfo form-control" placeholder="téléphone" id="inputDefault"
                 type='number' 
                 name='telephone'
                 value={formData.telephone} 
@@ -175,7 +209,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
             <label className="col-form-label">Numéro de siret</label> 
               <input 
-                className="form-control" placeholder="numéro de siret" id="inputDefault"
+                className="mainInfo form-control" placeholder="numéro de siret" id="inputDefault"
                 type='text' 
                 name='numero_siret'
                 value={formData.numero_siret} 
@@ -183,57 +217,91 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
               />
           </div>
 
-          <div className="form-group col-sm-12 col-md-6">
-            <label className="col-form-label">Sélectionner une compagnie</label>
+          <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
+          <div className="contract  col-sm-12 col-md-4">
+            <label className="col-control-label">Compagnie</label>
             <select
               name="compagnie"
-              value={formData.compagnie}
+              type="text"
+              value={newLine.compagnie}
+
               onChange={handleSelectChangeOne}
-              
               className="form-select" 
               id="exampleSelect1"
             >
-              <option value=""></option>
-              <option value="axa">AXA</option>
-              <option value="sampo">SAMPO</option>
+            <option value=""></option>
+            <option value="axa">AXA</option>
+            <option value="sampo">SAMPO</option>
             </select>
-            <label className="col-form-label">Numéro de contrat</label> 
-              <input 
-                className="form-control" placeholder="numéro de contrat" id="inputDefault"
-                type='text' 
-                name='numero_contrat'
-                value={formData.numero_contrat} 
-                onChange={handleInputChange}
-              />
           </div>
 
-          <div className="form-group col-sm-12 col-md-6">
-            <label className="col-form-label">Sélectionner multiple avec Ctrl</label>
+          <div className=" contract col-sm-12 col-md-4">
+            <label className="col-form-label">Numéro de contrat</label> 
+            <input 
+              className="form-control" placeholder="numéro de contrat" id="inputDefault"
+              type='text' 
+              name='numero_contrat'
+              value={newLine.numero_contrat}
+
+              onChange={handleSelectChangeOne}
+            />
+          </div>
+
+          <div className=" contract col-sm-12 col-md-4">
+            <label className="col-control-label">Type de contrat</label>
             <select 
               name="type_contrat"
-              type="select-multiple"
-              value={formData.type_contrat}
-              onChange={handleSelectChangeMultiple}
-              multiple={true}  
+              type="text"
+              // value={formLines.type_contrat}
+              value={newLine.type_contrat}
+
+              onChange={handleSelectChangeOne} 
+              className="form-select"
               id="exampleSelect2"
             >
-              
-              <option value="mrh">MRH</option>
-              <option value="mri">MRI</option>
-              <option value="rc">RC</option>
-              <option value="auto">Auto</option>
-              <option value="gav">GAV</option>
-              <option value="sante">Santé</option>
-              <option value="pj">PJ</option>
-              <option value="chasse">Chasse</option>
-              <option value="vie">Vie</option>
-              <option value="retraite">Retraite</option>
-              <option value="scolaire">Scolaire</option>
+            <option value=""></option>
+            <option value="mrh">MRH</option>
+            <option value="mri">MRI</option>
+            <option value="rc">RC</option>
+            <option value="auto">Auto</option>
+            <option value="gav">GAV</option>
+            <option value="sante">Santé</option>
+            <option value="pj">PJ</option>
+            <option value="chasse">Chasse</option>
+            <option value="vie">Vie</option>
+            <option value="retraite">Retraite</option>
+            <option value="scolaire">Scolaire</option>
             </select>
           </div>
 
+          <div className='contract addNew'>
+            <button onClick={handleAddLine} className="btn btn-light" type="submit">Rajouté</button>
+          </div>
 
-                
+          <div className='formLines'>
+          
+            {formLines.length > 0 && (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Compagnie</th>
+                    <th scope="col">Numéro de contrat</th>
+                    <th scope="col">Type de contrat</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formLines.map((line, index) => (
+                    <tr key={index}>
+                      <td>{line.compagnie.toUpperCase()}</td>
+                      <td>{line.numero_contrat.toUpperCase()}</td>
+                      <td>{line.type_contrat.toUpperCase()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
         </div>
 
         <div className="btn-group ">
