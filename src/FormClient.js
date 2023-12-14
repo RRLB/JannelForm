@@ -46,6 +46,11 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   //Set initial input values from params
   const setInitialInputValues = (queryParameters) => {
     
+    // Extracting lines from pdf = comma-separated strings and converting them to uppercase
+    const compagnie = (queryParameters.get('custom_n7') || '').toUpperCase().split(',');
+    const numeroContrat = (queryParameters.get('custom_t5') || '').toUpperCase().split(',');
+    const typeContrat = (queryParameters.get('custom_n6') || '').toUpperCase().split(',');
+
     setFormData((prevData) => ({
         ...prevData,
         nom: queryParameters.get('custom_t1') || '',
@@ -58,7 +63,22 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
         email: queryParameters.get('custom_t8') || '',
         profession: queryParameters.get('custom_t9') || '',
         observations: queryParameters.get('custom_t10') || '',
-        formLines: [], // Initialize formLines as an empty array
+        formLines: [
+          {
+            compagnie: compagnie,
+            numero_contrat: numeroContrat,
+            type_contrat: typeContrat,
+          }
+        ],
+    }));
+    
+
+    // Set the state
+    setFormLines((prevData) => ({
+      ...prevData,
+      compagnie: compagnie,
+      numero_contrat: numeroContrat,
+      type_contrat: typeContrat,
     }));
   };
   // useEffect to call setInitialInputValues on component mount and when searchParams changes
