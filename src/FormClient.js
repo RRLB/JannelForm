@@ -39,13 +39,20 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   //This is the JS function //run with this code in useEffect hook: queryParameters.forEach((value, key) => {console.log(`${key}: ${value}`);
   //Then return : let custom_t1 = queryParameters.get('custom_t1');
   const queryParameters = new URLSearchParams(window.location.search);
-  // console.log(queryParameters); //returns values
+  console.log(queryParameters); //returns values
   let ResId = queryParameters.get('resId');
   // console.log(ResId);
 
   //Set initial input values from params
   const setInitialInputValues = (queryParameters) => {
     
+    // Extracting lines from pdf = comma-separated strings and converting them to uppercase
+    // const compagnie = (queryParameters.get('custom_n7') || '').toLowerCase().split(',');
+    // const numeroContrat = (queryParameters.get('custom_t5') || '').toLowerCase().split(',');
+    // const typeContrat = (queryParameters.get('custom_n6') || '').toLowerCase().split(',');
+    // console.log(compagnie);
+    // console.log(numeroContrat);
+    // console.log(typeContrat);
     setFormData((prevData) => ({
         ...prevData,
         nom: queryParameters.get('custom_t1') || '',
@@ -58,8 +65,25 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
         email: queryParameters.get('custom_t8') || '',
         profession: queryParameters.get('custom_t9') || '',
         observations: queryParameters.get('custom_t10') || '',
-        formLines: [], // Initialize formLines as an empty array
+        formLines: [
+          // form lines cannot be passed in as parameters as compagnie and type contract are liste deroulante with fixed values
+          // so if there are 3 lines : Sampo/Sampo/Axa the params will be : Sampo/Axa
+          // {
+          //   compagnie: compagnie,
+          //   numero_contrat: numeroContrat,
+          //   type_contrat: typeContrat,
+          // }
+        ],
     }));
+    
+
+    // // Set the state
+    // setFormLines((prevData) => ({
+    //   ...prevData,
+    //   compagnie: compagnie,
+    //   numero_contrat: numeroContrat,
+    //   type_contrat: typeContrat,
+    // }));
   };
   // useEffect to call setInitialInputValues on component mount and when searchParams changes
   useEffect(() => {
@@ -68,7 +92,8 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       console.log(`${key}: ${value}`);
     });
   }, []);
-
+  console.log(formData);
+  console.log(formLines);
   // Handle input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -107,7 +132,7 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       numero_contrat: '',
       type_contrat: '',
     });
-  
+    console.log(formLines);
   };
 
   // Handle submit change
@@ -335,7 +360,7 @@ return (
                 <tbody>
                   {formLines.map((line, index) => (
                     <tr key={index}>
-                      <td>{line.compagnie.toUpperCase()}</td>
+                       <td>{line.compagnie.toUpperCase()}</td>
                       <td>{line.numero_contrat.toUpperCase()}</td>
                       <td>{line.type_contrat.toUpperCase()}</td>
                     </tr>

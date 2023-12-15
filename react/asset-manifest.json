@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/jannel/_ClientSpecific/41543/react/static/css/main.1f308576.css",
+    "main.js": "/jannel/_ClientSpecific/41543/react/static/js/main.60f41b2f.js",
+    "static/js/787.8122ecf0.chunk.js": "/jannel/_ClientSpecific/41543/react/static/js/787.8122ecf0.chunk.js",
+    "index.html": "/jannel/_ClientSpecific/41543/react/index.html",
+    "main.1f308576.css.map": "/jannel/_ClientSpecific/41543/react/static/css/main.1f308576.css.map",
+    "main.60f41b2f.js.map": "/jannel/_ClientSpecific/41543/react/static/js/main.60f41b2f.js.map",
+    "787.8122ecf0.chunk.js.map": "/jannel/_ClientSpecific/41543/react/static/js/787.8122ecf0.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.1f308576.css",
+    "static/js/main.60f41b2f.js"
+  ]
+}
