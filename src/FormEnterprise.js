@@ -31,7 +31,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   //This is the JS function //run with this code in useEffect hook: queryParameters.forEach((value, key) => {console.log(`${key}: ${value}`);
   //Then return : let custom_t1 = queryParameters.get('custom_t1');
   const queryParameters = new URLSearchParams(window.location.search);
-  // console.log(queryParameters); //returns values
+  console.log(queryParameters); //returns values
   
   let ResId = queryParameters.get('resId');
   // console.log(ResId);
@@ -40,10 +40,13 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   const setInitialInputValues = (queryParameters) => {
       
       // Extracting lines from pdf = comma-separated strings and converting them to uppercase
-      const compagnie = (queryParameters.get('custom_n7') || '').toUpperCase().split(',');
-      const numeroContrat = (queryParameters.get('custom_t5') || '').toUpperCase().split(',');
-      const typeContrat = (queryParameters.get('custom_n6') || '').toUpperCase().split(',');
-  
+      // const compagnie = (queryParameters.get('custom_n7') || '').toLowerCase().split(',');
+      // const numeroContrat = (queryParameters.get('custom_t5') || '').toLowerCase().split(',');
+      // const typeContrat = (queryParameters.get('custom_n6') || '').toLowerCase().split(',');
+      // console.log(compagnie);
+      // console.log(numeroContrat);
+      // console.log(compagnie);
+
     setFormData((prevData) => ({
       ...prevData,
       nom_societe: queryParameters.get('nom_societe') || '',
@@ -53,21 +56,21 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
       telephone: queryParameters.get('custom_t7') || '',
       numero_siret: queryParameters.get('numero_siret') || '',
       formLines: [
-        {
-          compagnie: compagnie,
-          numero_contrat: numeroContrat,
-          type_contrat: typeContrat,
-        }
+        // {
+        //   compagnie: compagnie,
+        //   numero_contrat: numeroContrat,
+        //   type_contrat: typeContrat,
+        // }
       ],
     }));
-    
     // Set the state
-    setFormLines((prevData) => ({
-      ...prevData,
-      compagnie: compagnie,
-      numero_contrat: numeroContrat,
-      type_contrat: typeContrat,
-    }));
+    // setFormLines([  // Update with an array
+    //   {
+    //     compagnie: compagnie,
+    //     numero_contrat: numeroContrat,
+    //     type_contrat: typeContrat,
+    //   }
+    // ]);
   };
 
   // useEffect to call setInitialInputValues on component mount and when searchParams changes
@@ -77,7 +80,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
       console.log(`${key}: ${value}`);
     });
   }, []);
-  
+  console.log(formData);
   // Handle input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -109,7 +112,7 @@ const handleAddLine = () => {
     };
   });
   // Use setFormLines to update the formLines state
-  setFormLines((prevLines) => [...prevLines, newLine]);
+  setFormLines((prevLines) => [...prevLines, lineToAdd]);
 
   // Clear the newLine state for the next line
   setNewLine({
@@ -117,7 +120,7 @@ const handleAddLine = () => {
     numero_contrat: '',
     type_contrat: '',
   });
-
+console.log(formLines);
 };
  
   // Handle submit change
@@ -293,7 +296,7 @@ const handleAddLine = () => {
                 <tbody>
                   {formLines.map((line, index) => (
                     <tr key={index}>
-                      <td>{line.compagnie.toUpperCase()}</td>
+                       <td>{line.compagnie.toUpperCase()}</td>
                       <td>{line.numero_contrat.toUpperCase()}</td>
                       <td>{line.type_contrat.toUpperCase()}</td>
                     </tr>
