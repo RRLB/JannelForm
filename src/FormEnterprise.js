@@ -2,6 +2,7 @@ import './App.css';
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import DropdownMenu from './components/DropdownMenu';  // Import component
 
 const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   //define state variables for each form field
@@ -10,6 +11,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     nom_societe: '',
     nom_gerant: '',
     adresse: '',
+    forme_juridique: '',
     email: '',
     telephone: '',
     numero_siret: '',
@@ -31,6 +33,9 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   //This is the JS function //run with this code in useEffect hook: queryParameters.forEach((value, key) => {console.log(`${key}: ${value}`);
   //Then return : let custom_t1 = queryParameters.get('custom_t1');
   const queryParameters = new URLSearchParams(window.location.search);
+
+  //  
+
   console.log(queryParameters); //returns values
   
   let ResId = queryParameters.get('resId');
@@ -52,6 +57,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
       nom_societe: queryParameters.get('nom_societe') || '',
       nom_gerant: queryParameters.get('nom_gerant') || '',
       adresse: queryParameters.get('custom_t2') || '',
+      forme_juridique: queryParameters.get('form_juridique') || '',
       email: queryParameters.get('custom_t8') || '',
       telephone: queryParameters.get('custom_t7') || '',
       numero_siret: queryParameters.get('numero_siret') || '',
@@ -75,7 +81,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
 
   // useEffect to call setInitialInputValues on component mount and when searchParams changes
   useEffect(() => {
-    setInitialInputValues(queryParameters);
+    setInitialInputValues(queryParameters,);
     queryParameters.forEach((value, key) => {
       console.log(`${key}: ${value}`);
     });
@@ -189,6 +195,17 @@ console.log(formLines);
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
+            <label className="col-form-label">Forme Juridique</label> 
+              <input 
+                className="mainInfo form-control" placeholder="forme juridique" id="inputDefault"
+                type='text' 
+                name='forme_juridique'
+                value={formData.form_juridique} 
+                onChange={handleInputChange}
+              />
+          </div>
+
+          <div className="form-group col-sm-12 col-md-6 col-lg-4">
             <label className="col-form-label">Email</label>  
               <input 
               className="mainInfo form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="email"
@@ -222,62 +239,7 @@ console.log(formLines);
           </div>
 
           <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
-          <div className="contract  col-sm-12 col-md-4">
-            <label className="col-control-label">Compagnie</label>
-            <select
-              name="compagnie"
-              type="text"
-              value={newLine.compagnie}
-
-              onChange={handleSelectChangeOne}
-              className="form-select" 
-              id="exampleSelect1"
-            >
-            <option value=""></option>
-            <option value="axa">AXA</option>
-            <option value="sampo">SAMPO</option>
-            </select>
-          </div>
-
-          <div className=" contract col-sm-12 col-md-4">
-            <label className="col-form-label">Numéro de contrat</label> 
-            <input 
-              className="form-control" placeholder="numéro de contrat" id="inputDefault"
-              type='text' 
-              name='numero_contrat'
-              value={newLine.numero_contrat}
-
-              onChange={handleSelectChangeOne}
-            />
-          </div>
-
-          <div className=" contract col-sm-12 col-md-4">
-            <label className="col-control-label">Type de contrat</label>
-            <select 
-              name="type_contrat"
-              type="text"
-              // value={formLines.type_contrat}
-              value={newLine.type_contrat}
-
-              onChange={handleSelectChangeOne} 
-              className="form-select"
-              id="exampleSelect2"
-            >
-            <option value=""></option>
-            <option value="mrh">MRH</option>
-            <option value="mri">MRI</option>
-            <option value="rc">RC</option>
-            <option value="auto">Auto</option>
-            <option value="gav">GAV</option>
-            <option value="sante">Santé</option>
-            <option value="pj">PJ</option>
-            <option value="chasse">Chasse</option>
-            <option value="vie">Vie</option>
-            <option value="retraite">Retraite</option>
-            <option value="scolaire">Scolaire</option>
-            </select>
-          </div>
-
+          <DropdownMenu />
           <div className='contract addNew'>
             <button onClick={handleAddLine} className="btn btn-light" type="submit">Rajouté</button>
           </div>
