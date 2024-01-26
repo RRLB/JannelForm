@@ -379,7 +379,7 @@ return (
           </div>
 
           <div >
-            <button onClick={() => handleOnClickClose()} className=" btn btn-primary " type="submit">Validé</button>
+            <button onClick={() => handleOnClickClose()} className=" btn btn-primary " type="submit">Valider</button>
           </div>
         </div>
         
