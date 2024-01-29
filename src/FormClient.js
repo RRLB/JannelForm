@@ -101,20 +101,15 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     setFormData({ ...formData, [name]: value });
   };
 
-   // Handle select change for company
-  const handleSelectChangeOne = (e) => {
-    const { name, value } = e.target;
-    setNewLine((prevLine) => ({ ...prevLine, [name]: value }));
-  };
-
   const handleAddLine = () => {
+    console.log('Current newLine state:', newLine);
     // Create a new line using the current state of newLine
     const lineToAdd = {
       compagnie: newLine.compagnie,
       numero_contrat: newLine.numero_contrat,
       type_contrat: newLine.type_contrat,
     };
-    
+    console.log(lineToAdd);
     // Update formLines in formData using the callback function
     setFormData((prevData) => {
       const updatedFormLines = [...prevData.formLines, lineToAdd];
@@ -125,7 +120,7 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       };
     });
     // Use setFormLines to update the formLines state
-    setFormLines((prevLines) => [...prevLines, newLine]);
+    setFormLines((prevLines) => [...prevLines, lineToAdd]);
   
     // Clear the newLine state for the next line
     setNewLine({
@@ -133,8 +128,13 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       numero_contrat: '',
       type_contrat: '',
     });
-    console.log(formLines);
   };
+  
+  useEffect(() => {
+    // Log the formLines state after it has been updated
+    console.log(formLines);
+  }, [formLines]); // Add formLines as a dependency to useEffect
+   
 
   // Handle submit change
   const handleSubmit = async () => {
@@ -285,7 +285,7 @@ return (
           </div>
 
           <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
-          <DropdownMenu />
+          <DropdownMenu  newLine={newLine} setNewLine={setNewLine} setFormLines={setFormLines} formType="client"/>
           
 
           <div className='contract addNew'>
@@ -306,9 +306,9 @@ return (
                 <tbody>
                   {formLines.map((line, index) => (
                     <tr key={index}>
-                       <td>{line.compagnie.toUpperCase()}</td>
-                      <td>{line.numero_contrat.toUpperCase()}</td>
-                      <td>{line.type_contrat.toUpperCase()}</td>
+                      <td>{Array.isArray(line.compagnie) ? line.compagnie.join(', ').toUpperCase() : line.compagnie.toUpperCase()}</td>
+                      <td>{Array.isArray(line.numero_contrat) ? line.numero_contrat.join(', ').toUpperCase() : line.numero_contrat.toUpperCase()}</td>
+                      <td>{Array.isArray(line.type_contrat) ? line.type_contrat.join(', ').toUpperCase() : line.type_contrat.toUpperCase()}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -122,11 +122,12 @@ const handleAddLine = () => {
     type_contrat: '',
   });
 };
+
 useEffect(() => {
   // Log the formLines state after it has been updated
   console.log(formLines);
 }, [formLines]); // Add formLines as a dependency to useEffect
- 
+ console.log(formData);
   // Handle submit change
   const handleSubmit = async () => {
       // console.log(formData);
@@ -238,7 +239,7 @@ useEffect(() => {
 
           <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
           
-          <DropdownMenu newLine={newLine} setNewLine={setNewLine} setFormLines={setFormLines} />
+          <DropdownMenu newLine={newLine} setNewLine={setNewLine} setFormLines={setFormLines} formType="enterprise"/>
 
 
           <div className='contract addNew'>
@@ -259,9 +260,9 @@ useEffect(() => {
                 <tbody>
                   {formLines.map((line, index) => (
                     <tr key={index}>
-                       <td>{line.compagnie.toUpperCase()}</td>
-                      <td>{line.numero_contrat.toUpperCase()}</td>
-                      <td>{line.type_contrat.toUpperCase()}</td>
+                      <td>{Array.isArray(line.compagnie) ? line.compagnie.join(', ').toUpperCase() : line.compagnie.toUpperCase()}</td>
+                      <td>{Array.isArray(line.numero_contrat) ? line.numero_contrat.join(', ').toUpperCase() : line.numero_contrat.toUpperCase()}</td>
+                      <td>{Array.isArray(line.type_contrat) ? line.type_contrat.join(', ').toUpperCase() : line.type_contrat.toUpperCase()}</td>
                     </tr>
                   ))}
                 </tbody>
