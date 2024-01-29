@@ -93,21 +93,16 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Handle select change for company
-const handleSelectChangeOne = (e) => {
-  const { name, value } = e.target;
-  setNewLine((prevLine) => ({ ...prevLine, [name]: value }));
-};
 
 const handleAddLine = () => {
-  
+  console.log('Current newLine state:', newLine);
   // Create a new line using the current state of newLine
   const lineToAdd = {
     compagnie: newLine.compagnie,
     numero_contrat: newLine.numero_contrat,
     type_contrat: newLine.type_contrat,
   };
-  
+  console.log(lineToAdd);
   // Update formLines in formData using the callback function
   setFormData((prevData) => {
     const updatedFormLines = [...prevData.formLines, lineToAdd];
@@ -126,8 +121,11 @@ const handleAddLine = () => {
     numero_contrat: '',
     type_contrat: '',
   });
-console.log(formLines);
 };
+useEffect(() => {
+  // Log the formLines state after it has been updated
+  console.log(formLines);
+}, [formLines]); // Add formLines as a dependency to useEffect
  
   // Handle submit change
   const handleSubmit = async () => {
@@ -239,7 +237,10 @@ console.log(formLines);
           </div>
 
           <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
-          <DropdownMenu />
+          
+          <DropdownMenu newLine={newLine} setNewLine={setNewLine} setFormLines={setFormLines} />
+
+
           <div className='contract addNew'>
             <button onClick={handleAddLine} className="btn btn-light" type="submit">Rajouté</button>
           </div>
