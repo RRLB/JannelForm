@@ -30,6 +30,8 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     numero_contrat: '',
     type_contrat: '',
   });
+  const [formError, setFormError] = useState(null);
+  
 
   // Log all query parameters
   //These are both the same
@@ -40,7 +42,7 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   //This is the JS function //run with this code in useEffect hook: queryParameters.forEach((value, key) => {console.log(`${key}: ${value}`);
   //Then return : let custom_t1 = queryParameters.get('custom_t1');
   const queryParameters = new URLSearchParams(window.location.search);
-  console.log(queryParameters); //returns values
+  // console.log(queryParameters); //returns values
   let ResId = queryParameters.get('resId');
   // console.log(ResId);
 
@@ -93,8 +95,8 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       console.log(`${key}: ${value}`);
     });
   }, []);
-  console.log(formData);
-  console.log(formLines);
+  // console.log(formData);
+  // console.log(formLines);
   // Handle input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -102,18 +104,18 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   };
 
   const handleAddLine = () => {
-    console.log('Current newLine state:', newLine);
+    // console.log('Current newLine state:', newLine);
     // Create a new line using the current state of newLine
     const lineToAdd = {
       compagnie: newLine.compagnie,
       numero_contrat: newLine.numero_contrat,
       type_contrat: newLine.type_contrat,
     };
-    console.log(lineToAdd);
+    // console.log(lineToAdd);
     // Update formLines in formData using the callback function
     setFormData((prevData) => {
       const updatedFormLines = [...prevData.formLines, lineToAdd];
-      console.log(updatedFormLines); // Log the updated formLines
+      // console.log(updatedFormLines); // Log the updated formLines
       return {
         ...prevData,
         formLines: updatedFormLines,
@@ -132,30 +134,48 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   
   useEffect(() => {
     // Log the formLines state after it has been updated
-    console.log(formLines);
+    // console.log(formLines);
   }, [formLines]); // Add formLines as a dependency to useEffect
    
-
-  // Handle submit change
-  const handleSubmit = async () => {
-    axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
-    formData, { crossdomain: true, headers: {'Form': 'Client', 'ResId': ResId } })
-    .then(res=>{
-      console.log(res);
-      console.log(res.data);
-      //send response to editForm.js
-      if (onFormSubmissionSuccess) {
-        onFormSubmissionSuccess();
-      }
-    })
-  };
-
   //Navigate to homepage
   const navigate = useNavigate();
-  const handleOnClickClose = async () => {
-    const handleForm = await handleSubmit()
-    //redirect to homepage
-    navigate('/');
+  // Handle submit change
+  const handleSubmit = async (event) => {
+    if (event) {
+      event.preventDefault();
+    }
+    // console.log("Form Data:", formData);
+    const { nom, prenom, email } = formData; // Destructure nom and email from formData
+    
+    if(!nom || !prenom || !email){
+      setFormError('Ce champ est obligatoires !');
+      // console.log("error");
+    } else {
+      // console.log("no error");
+      setFormError(null)
+      axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
+      formData, { crossdomain: true, headers: {'Form': 'Client', 'ResId': ResId } })
+      .then(res=>{
+        // console.log(res);
+        // console.log(res.data);
+        //send response to editForm.js
+        if (onFormSubmissionSuccess) {
+          onFormSubmissionSuccess();
+        }
+        // console.log("Navigating...");
+        // Redirect to homepage
+        navigate('/');
+      })
+      .catch(error => {
+        // Handle any errors if the request fails
+        console.error("An error occurred:", error);
+      });
+    }
+  };
+
+  
+  const handleOnClickClose = async (event) => {
+    await handleSubmit(event)
   }
       
 return (
@@ -178,7 +198,9 @@ return (
               name="nom"
               value={formData.nom}
               onChange={handleInputChange}
+              required
             />
+            {formError && <div className="alert alert-danger">{formError}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
@@ -189,7 +211,9 @@ return (
               name="prenom"
               value={formData.prenom}
               onChange={handleInputChange}
+              required
             />
+            {formError && <div className="alert alert-danger">{formError}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
@@ -255,7 +279,10 @@ return (
               name="email"
               value={formData.email}
               onChange={handleInputChange}
+              required
+              
             />
+            {formError && <div className="alert alert-danger">{formError}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
@@ -325,7 +352,7 @@ return (
           </div>
 
           <div >
-            <button onClick={() => handleOnClickClose()} className=" btn btn-primary " type="submit">Valider</button>
+            <button onClick={(event) => handleOnClickClose(event)} className=" btn btn-primary " type="submit">Valider</button>
           </div>
         </div>
         
