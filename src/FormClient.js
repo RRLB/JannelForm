@@ -145,9 +145,9 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       event.preventDefault();
     }
     // console.log("Form Data:", formData);
-    const { nom, prenom, email } = formData; // Destructure nom and email from formData
+    const { nom, prenom, email, telephone } = formData; // Destructure nom and email from formData
     
-    if(!nom || !prenom || !email){
+    if(!nom || !prenom || !email || !telephone){
       setFormError('Ce champ est obligatoires !');
       // console.log("error");
     } else {
@@ -268,7 +268,9 @@ return (
               name="telephone"
               value={formData.telephone}
               onChange={handleInputChange}
+              require
             />
+            {formError && <div className="alert alert-danger">{formError}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
