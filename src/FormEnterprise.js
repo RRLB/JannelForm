@@ -1,8 +1,10 @@
 import './App.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import DropdownMenu from './components/DropdownMenu';  // Import component
+
+
 
 const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   //define state variables for each form field
@@ -11,20 +13,29 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     nom_societe: '',
     nom_gerant: '',
     adresse: '',
+    code_postal: '',
+    ville: '',
     forme_juridique: '',
     email: '',
     telephone: '',
     numero_siret: '',
+    observations: '',
+    textareaHeight: 'auto',
     formLines: [],
     
   });
+  const textareaRef = useRef(null);
   const [formLines, setFormLines] = useState([]);
   const [newLine, setNewLine] = useState({
     compagnie: '',
     numero_contrat: '',
     type_contrat: '',
   });
-  const [formError, setFormError] = useState(null);
+  const [formError, setFormError] = useState({
+    nom_societe: false,
+    email: false,
+    telephone: false
+  });
   // Log all query parameters
   //These are both the same
   //This uses React hook which has the below function built in. it returns an object of params
@@ -55,10 +66,13 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
       nom_societe: queryParameters.get('nom_societe') || '',
       nom_gerant: queryParameters.get('nom_gerant') || '',
       adresse: queryParameters.get('custom_t2') || '',
+      code_postal: queryParameters.get('custom_t3') || '',
+      ville: queryParameters.get('custom_t6') || '',
       forme_juridique: queryParameters.get('form_juridique') || '',
       email: queryParameters.get('custom_t8') || '',
       telephone: queryParameters.get('custom_t7') || '',
       numero_siret: queryParameters.get('numero_siret') || '',
+      observations: queryParameters.get('custom_t10') || '',
       formLines: [
         // {
         //   compagnie: compagnie,
@@ -92,72 +106,92 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   };
 
 
-const handleAddLine = () => {
-  // console.log('Current newLine state:', newLine);
-  // Create a new line using the current state of newLine
-  const lineToAdd = {
-    compagnie: newLine.compagnie,
-    numero_contrat: newLine.numero_contrat,
-    type_contrat: newLine.type_contrat,
-  };
-  // console.log(lineToAdd);
-  // Update formLines in formData using the callback function
-  setFormData((prevData) => {
-    const updatedFormLines = [...prevData.formLines, lineToAdd];
-    // console.log(updatedFormLines); // Log the updated formLines
-    return {
-      ...prevData,
-      formLines: updatedFormLines,
+  const handleAddLine = () => {
+    // console.log('Current newLine state:', newLine);
+    // Create a new line using the current state of newLine
+    const lineToAdd = {
+      compagnie: newLine.compagnie,
+      numero_contrat: newLine.numero_contrat,
+      type_contrat: newLine.type_contrat,
     };
-  });
-  // Use setFormLines to update the formLines state
-  setFormLines((prevLines) => [...prevLines, lineToAdd]);
+    // console.log(lineToAdd);
+    // Update formLines in formData using the callback function
+    setFormData((prevData) => {
+      const updatedFormLines = [...prevData.formLines, lineToAdd];
+      // console.log(updatedFormLines); // Log the updated formLines
+      return {
+        ...prevData,
+        formLines: updatedFormLines,
+      };
+    });
+    // Use setFormLines to update the formLines state
+    setFormLines((prevLines) => [...prevLines, lineToAdd]);
 
-  // Clear the newLine state for the next line
-  setNewLine({
-    compagnie: '',
-    numero_contrat: '',
-    type_contrat: '',
-  });
-};
+    // Clear the newLine state for the next line
+    setNewLine({
+      compagnie: '',
+      numero_contrat: '',
+      type_contrat: '',
+    });
+  };
 
-useEffect(() => {
-  // Log the formLines state after it has been updated
-  // console.log(formLines);
-}, [formLines]); // Add formLines as a dependency to useEffect
+  useEffect(() => {
+    // Log the formLines state after it has been updated
+    // console.log(formLines);
+  }, [formLines]); // Add formLines as a dependency to useEffect
 
-//Navigate to homepage
-const navigate = useNavigate();
-// Handle submit change
-const handleSubmit = async (event) => {
-  if (event) {
-    event.preventDefault();
+  //auto Resize Text Box to fit length of text
+  const autoResize = (event) => {
+    const textarea = event.target;
+    textarea.style.height = 'auto'; //reset the height
+    textarea.style.height = `${textarea.scrollHeight}px`; //set the height to the scroll height
+    setFormData({ ...formData, textareaHeight: `${textarea.scrollHeight}px`, observations: textarea.value });
+  };
+
+
+  //Navigate to homepage
+  const navigate = useNavigate();
+  // Handle submit change
+  const handleSubmit = async (event) => {
+    if (event) {
+      event.preventDefault();
+    }
+
+    const { nom_societe, email, telephone } = formData; // Destructure nom and email from formData
+    if(!nom_societe || !email || !telephone ){
+      setFormError({
+        nom_societe: !nom_societe,
+        email: !email,
+        telephone: !telephone
+      });
+    } else {
+      setFormError({
+        nom_societe: !nom_societe,
+        email: !email,
+        telephone: !telephone
+      })
+      // console.log(formData);
+      axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
+      formData, { crossdomain: true, headers: {'Form': 'Entreprise', 'ResId': ResId} })
+      .then(res=>{
+        // console.log(res);
+        // console.log(res.data);
+        //send response to editForm.js
+        if (onFormSubmissionSuccess) {
+          onFormSubmissionSuccess();
+        }
+        //redirect to homepage
+        navigate('/');
+      })
+    }
+  };
+
+  const handleOnClickClose = async (event) => {
+    const handleForm = await handleSubmit(event)
   }
 
-  const { nom_societe, email, telephone } = formData; // Destructure nom and email from formData
-  if(!nom_societe || !email || !telephone ){
-    setFormError('Ce champ est obligatoires !');
-  } else {
-    setFormError(null)
-    axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
-    formData, { crossdomain: true, headers: {'Form': 'Entreprise', 'ResId': ResId} })
-    .then(res=>{
-      // console.log(res);
-      // console.log(res.data);
-      //send response to editForm.js
-      if (onFormSubmissionSuccess) {
-        onFormSubmissionSuccess();
-      }
-      //redirect to homepage
-      navigate('/');
-    })
-  }
-};
-
-const handleOnClickClose = async (event) => {
-  const handleForm = await handleSubmit(event)
-}
-
+  const errorMessage = "Ce champs est obligatoire";
+  
   return (
     <div className="Form form-group"> 
         <h1>Formulaire fiche entreprise</h1>
@@ -167,7 +201,7 @@ const handleOnClickClose = async (event) => {
         <div className="row">
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Nom société</label> 
+            <label className="col-form-label">Nom société *</label> 
               <input 
                 className="mainInfo form-control" placeholder="nom société" id="inputDefault"
                 type='text' 
@@ -176,7 +210,7 @@ const handleOnClickClose = async (event) => {
                 onChange={handleInputChange}
                 require
               />
-              {formError && <div className="alert alert-danger">{formError}</div>}
+              {formError.nom_societe && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
@@ -202,6 +236,28 @@ const handleOnClickClose = async (event) => {
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
+            <label className="col-form-label">Code postal</label>
+            <input
+              className="mainInfo form-control" placeholder="code postal" id="inputDefault"
+              type="text"
+              name="code_postal"
+              value={formData.code_postal}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          <div className="form-group col-sm-12 col-md-6 col-lg-4">
+            <label className="col-form-label">Ville</label>
+            <input
+              className="mainInfo form-control" placeholder="ville" id="inputDefault"
+              type="text"
+              name="ville"
+              value={formData.ville}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          <div className="form-group col-sm-12 col-md-6 col-lg-4">
             <label className="col-form-label">Forme Juridique</label> 
               <input 
                 className="mainInfo form-control" placeholder="forme juridique" id="inputDefault"
@@ -213,7 +269,7 @@ const handleOnClickClose = async (event) => {
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Email</label>  
+            <label className="col-form-label">Email *</label>  
               <input 
               className="mainInfo form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="email"
                 type='email' 
@@ -222,20 +278,20 @@ const handleOnClickClose = async (event) => {
                 onChange={handleInputChange}
                 require
               />
-              {formError && <div className="alert alert-danger">{formError}</div>}
+              {formError.email && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Téléphone</label> 
+            <label className="col-form-label">Téléphone *</label> 
               <input 
                 className="mainInfo form-control" placeholder="téléphone" id="inputDefault"
-                type='number' 
+                type='text' 
                 name='telephone'
                 value={formData.telephone} 
                 onChange={handleInputChange}
                 require
               />
-              {formError && <div className="alert alert-danger">{formError}</div>}
+              {formError.telephone && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
@@ -247,6 +303,24 @@ const handleOnClickClose = async (event) => {
                 value={formData.numero_siret} 
                 onChange={handleInputChange}
               />
+          </div>
+
+          <div className="form-group col-sm-12 ">
+            <label className="col-form-label" >Observations</label>
+            <textarea
+              placeholder="texte..."
+              rows="1"
+              className="mainInfo form-control" 
+              id="exampleTextarea"
+              type="text"
+              name="observations"
+              // style={{ overflow: 'auto' }} //creates scroll bar
+              value={formData.observations}
+              onChange={(e) =>{ handleInputChange(e); autoResize(e); }}
+              onInput={autoResize}
+              ref={textareaRef}
+              style={{ height: formData.textareaHeight }} // Apply the dynamic height
+            ></textarea>
           </div>
 
           <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>

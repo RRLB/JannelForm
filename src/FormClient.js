@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 // import ReactPDF from '@react-pdf/renderer';
 // import CreatePDF from './CreatePDF';
 import axios from 'axios';
@@ -21,17 +21,25 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     email: '',
     profession: '',
     observations: '',
+    textareaHeight: 'auto',
     formLines: [],
     
   });
+  const textareaRef = useRef(null);
   const [formLines, setFormLines] = useState([]);
   const [newLine, setNewLine] = useState({
     compagnie: '',
     numero_contrat: '',
     type_contrat: '',
   });
-  const [formError, setFormError] = useState(null);
-  
+  const [formError, setFormError] = useState({
+    nom: false,
+    prenom: false,
+    telephone: false,
+    email: false
+  });
+ 
+
 
   // Log all query parameters
   //These are both the same
@@ -92,7 +100,7 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   useEffect(() => {
     setInitialInputValues(queryParameters);
     queryParameters.forEach((value, key) => {
-      console.log(`${key}: ${value}`);
+      // console.log(`${key}: ${value}`);
     });
   }, []);
   // console.log(formData);
@@ -137,6 +145,14 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     // console.log(formLines);
   }, [formLines]); // Add formLines as a dependency to useEffect
    
+  //auto Resize Text Box to fit length of text
+  const autoResize = (event) => {
+    const textarea = event.target;
+    textarea.style.height = 'auto'; //reset the height
+    textarea.style.height = `${textarea.scrollHeight}px`; //set the height to the scroll height
+    setFormData({ ...formData, textareaHeight: `${textarea.scrollHeight}px`, observations: textarea.value });
+  };
+// console.log(formData);
   //Navigate to homepage
   const navigate = useNavigate();
   // Handle submit change
@@ -148,15 +164,28 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     const { nom, prenom, email, telephone } = formData; // Destructure nom and email from formData
     
     if(!nom || !prenom || !email || !telephone){
-      setFormError('Ce champ est obligatoires !');
+      // console.log(formError);
+      setFormError({
+        nom: !nom,
+        prenom: !prenom,
+        telephone: !telephone,
+        email: !email
+      });
       // console.log("error");
     } else {
-      // console.log("no error");
-      setFormError(null)
+      // console.log(formError);
+      // console.log(formData);
+      
+      setFormError({
+        nom: !nom,
+        prenom: !prenom,
+        telephone: !telephone,
+        email: !email
+      })
       axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
       formData, { crossdomain: true, headers: {'Form': 'Client', 'ResId': ResId } })
       .then(res=>{
-        // console.log(res);
+        
         // console.log(res.data);
         //send response to editForm.js
         if (onFormSubmissionSuccess) {
@@ -177,6 +206,8 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   const handleOnClickClose = async (event) => {
     await handleSubmit(event)
   }
+
+  const errorMessage = "Ce champs est obligatoire";
       
 return (
 
@@ -191,7 +222,7 @@ return (
         <div className="row">
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Nom</label>
+            <label className="col-form-label">Nom *</label>
             <input
             className="form-control" placeholder="nom" id="inputDefault"
               type="text"
@@ -200,11 +231,11 @@ return (
               onChange={handleInputChange}
               required
             />
-            {formError && <div className="alert alert-danger">{formError}</div>}
+            {formError.nom && <div className="alert alert-danger" style={{fontSize: '12px'}}>{errorMessage}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Prénom</label>
+            <label className="col-form-label">Prénom *</label>
             <input
               className="form-control" placeholder="prénom" id="inputDefault"
               type="text"
@@ -213,7 +244,7 @@ return (
               onChange={handleInputChange}
               required
             />
-            {formError && <div className="alert alert-danger">{formError}</div>}
+            {formError.prenom && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
@@ -261,20 +292,20 @@ return (
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Téléphone</label>
+            <label className="col-form-label">Téléphone *</label>
             <input
               className="form-control" placeholder="téléphone" id="inputDefault"
-              type="number"
+              type="text"
               name="telephone"
               value={formData.telephone}
               onChange={handleInputChange}
               require
             />
-            {formError && <div className="alert alert-danger">{formError}</div>}
+            {formError.telephone && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Email</label>
+            <label className="col-form-label">Email *</label>
             <input
               className="form-control" placeholder="email" id="inputDefault"
               type="email"
@@ -284,7 +315,7 @@ return (
               required
               
             />
-            {formError && <div className="alert alert-danger">{formError}</div>}
+            {formError.email && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
           </div>
 
           <div className="form-group col-sm-12 col-md-6 col-lg-4">
@@ -302,14 +333,16 @@ return (
             <label className="col-form-label" >Observations</label>
             <textarea
               placeholder="texte..."
-              rows="6"
-              colls="8"
+              rows="1"
               className="form-control" 
               id="exampleTextarea"
               type="text"
               name="observations"
               value={formData.observations}
-              onChange={handleInputChange}
+              onChange={(e) =>{ handleInputChange(e); autoResize(e); }}
+              onInput={autoResize}
+              ref={textareaRef}
+              style={{ height: formData.textareaHeight }} // Apply the dynamic height
             ></textarea>
           </div>
 

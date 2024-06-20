@@ -64,7 +64,7 @@ const DropdownMenu = ({ newLine, setNewLine, setFormLines, formType }) => {
 
   const handleInputChangeNumeroContrat = (e) => {
     const { name, value } = e.target;
-    console.log('value numero contrat:', value);
+    // console.log('value numero contrat:', value);
     setNewLine((prevLine) => ({ ...prevLine, [name]: value }));
   };
 
