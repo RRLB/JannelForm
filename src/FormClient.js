@@ -35,6 +35,7 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     formLines: [],
     
   });
+  
   const [formLines, setFormLines] = useState([]);
   const [newLine, setNewLine] = useState({
     compagnie: '',
@@ -49,8 +50,6 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     email: false
   });
  
-  const [isValidEmail, setIsValidEmail] = useState(true); // State for email format validation
-  const [isValidDOB, setIsValidDOB] = useState(true); // State for email format validation
   const navigate = useNavigate();
 
   // Log all query parameters
@@ -113,7 +112,13 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       console.log(`${key}: ${value}`);
     });
   }, []);
- 
+ //auto Resize Text Box to fit length of text
+ const autoResize = (event) => {
+  const textarea = event.target;
+  textarea.style.height = 'auto'; //reset the height
+  textarea.style.height = `${textarea.scrollHeight}px`; //set the height to the scroll height
+  setFormData({ ...formData, textareaHeight: `${textarea.scrollHeight}px`, observations: textarea.value });
+};
    // Function to validate email format
    const validateEmail = (email) => {
     if (!email.trim()) {
@@ -123,22 +128,7 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     }
     return '';
   };
-  // const validateDOB = (dob) => {
-  //   console.log(dob);
-  //   if (!dob.trim()) {
-  //     return 'Date de naissance est requise';
-  //   } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
-  //     return 'Format de date invalide (utilisez jj/mm/aaaa)';
-  //   }
-  
-  //   const [day, month, year] = dob.split('/');
-  //   const isoDate = `${year}-${month}-${day}`;
-  //   if (!moment(isoDate, 'YYYY-MM-DD', true).isValid()) {
-  //     return 'Date de naissance invalide';
-  //   }
-  
-  //   return '';
-  // };
+
 
   const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
@@ -149,6 +139,14 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     //   validateDOB(value); // Validate email format on email input change
     // }
     validateField(name, value);
+  };
+
+  // Function to handle textarea resize
+  const handleTextareaResize = (newHeight) => {
+    setFormData(prevData => ({
+        ...prevData,
+        textareaHeight: `${newHeight}px` // Update textareaHeight based on new height
+    }));
   };
 
   const validateField = (name, value) => {
@@ -208,14 +206,14 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     // console.log(formLines);
   }, [formLines]); // Add formLines as a dependency to useEffect
    
- 
+  console.log(formData.textareaHeight);
   // Handle submit change
   const handleSubmit = async (event) => {
     if (event) {
       event.preventDefault();
     }
      // Validate all fields before submission
-     const fields = ['nom_societe', 'email', 'telephone'];
+     const fields = ['nom', 'prenom', 'email', 'telephone'];
      let errors = { ...formErrors };
  
      fields.forEach(field => {
@@ -224,28 +222,23 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
  
      setFormErrors(errors);
      console.log(errors);
-    // console.log("Form Data:", formData);
-    const { nom, prenom, email, telephone } = formData; // Destructure nom and email from formData
     
+    const { nom, prenom, email, telephone } = formData; // Destructure nom and email from formData
     if(!nom || !prenom || !email || !telephone){
-      // console.log(formError);
       setFormErrors({
-        nom: !nom,
-        prenom: !prenom,
-        telephone: !telephone,
-        email: !email
+        nom: !nom ? "Nom est requis" : "",
+        prenom: !prenom ? "Prénom est requis" : "",
+        telephone: !telephone ? 'Numéro de téléphone est requis' : '',
+        email: !email ? "Adresse e-mail est requis" : "",
       });
-      // console.log("error");
     } else {
-      // console.log(formError);
-      // console.log(formData);
-      
       setFormErrors({
         nom: !nom,
         prenom: !prenom,
         telephone: !telephone,
         email: !email
       })
+      
       axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
       formData, { crossdomain: true, headers: {'Form': 'Client', 'ResId': ResId } })
       .then(res=>{
@@ -351,6 +344,7 @@ return (
               value={formData.observations}
               onChange={handleInputChange}
               height={formData.textareaHeight}
+              handleResize={handleTextareaResize} // Pass handleResize function to TextArea
             />
 
           <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>

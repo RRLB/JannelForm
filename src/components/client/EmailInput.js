@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 
 const EmailInput = ({ label, name, value, onChange, required, error }) => {
-//   const [isValid, setIsValid] = useState(true); // State to manage local validation
+
   const [localError, setLocalError] = useState(''); // State to manage local validation
 
   const handleChange = (e) => {
@@ -16,10 +16,7 @@ const EmailInput = ({ label, name, value, onChange, required, error }) => {
         emailError = 'Adresse e-mail invalide';
     }
     setLocalError(emailError);
-    // const isValidLocal = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-    // setIsValid(isValidLocal);
-
-    
+ 
   };
 
   return (

@@ -1,5 +1,5 @@
 import './App.css';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import TextInput from './components/enterprise/TextInput';
@@ -28,7 +28,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     formLines: [],
     
   });
-  
+ 
   const [formLines, setFormLines] = useState([]);
   const [newLine, setNewLine] = useState({
     compagnie: '',
@@ -41,8 +41,6 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     telephone: false
   });
 
-  const [isValidEmail, setIsValidEmail] = useState(true); // State for email format validation
- 
   const navigate = useNavigate();
 
   // Log all query parameters
@@ -60,28 +58,47 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
   //Set initial input values from params
   const setInitialInputValues = (queryParameters) => {
       // Extracting lines from pdf = comma-separated strings and converting them to uppercase
+      const compagnies = (queryParameters.get('custom_n7') || '').split(',');
+      const numeroContrats = (queryParameters.get('custom_t5') || '').split(',');
+      const typeContrats = (queryParameters.get('custom_n1') || '').split(',');
+
+      const formLinesArray = compagnies.map((compagnie, index) => ({
+        compagnie: compagnie.trim(),
+        numero_contrat: numeroContrats[index] ? numeroContrats[index].trim() : '', // Ensure to check if value exists
+        type_contrat: typeContrats[index] ? typeContrats[index].trim() : '', // Ensure to check if value exists
+      }));
+
     setFormData((prevData) => ({
       ...prevData,
-      nom_societe: queryParameters.get('nom_societe') || '',
-      nom_gerant: queryParameters.get('nom_gerant') || '',
+      nom_societe: queryParameters.get('custom_t15') || '',
+      nom_gerant: queryParameters.get('custom_t1') || '',
       adresse: queryParameters.get('custom_t2') || '',
       code_postal: queryParameters.get('custom_t3') || '',
       ville: queryParameters.get('custom_t6') || '',
-      forme_juridique: queryParameters.get('forme_juridique') || '',
+      forme_juridique: queryParameters.get('custom_t16') || '',
       email: queryParameters.get('custom_t8') || '',
       telephone: queryParameters.get('custom_t7') || '',
-      numero_siret: queryParameters.get('numero_siret') || '',
+      numero_siret: queryParameters.get('custom_t14') || '',
       observations: queryParameters.get('custom_t10') || '',
-      formLines: [
+      formLines: formLinesArray,
+      // formLines: [
         // form lines cannot be passed in as parameters as compagnie and type contract are liste deroulante with fixed values
         // so if there are 3 lines : Sampo/Sampo/Axa the params will be : Sampo/Axa
         // {
-        //   compagnie: compagnie,
-        //   numero_contrat: numeroContrat,
-        //   type_contrat: typeContrat,
+          // compagnie: queryParameters.get('custom_tcustom_n710') || '',
+          // numero_contrat: queryParameters.get('custom_t5') || '',
+          // type_contrat: queryParameters.get('custom_n1') || '',
         // }
-      ],
+      // ],
     }));
+    // setFormLines([  // Update with an array
+    //   {
+    //     compagnie: queryParameters.get('custom_n7') || '',
+    //       numero_contrat: queryParameters.get('custom_t5') || '',
+    //       type_contrat: queryParameters.get('custom_n1') || '',
+    //   }
+    // ]);
+    console.log(formLinesArray)
   };
 
   // useEffect to call setInitialInputValues on component mount and when searchParams changes
@@ -92,14 +109,6 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     });
   }, []);
 
-  // // Handle input change
-  // const handleInputChange = (e) => {
-  //   const { name, value } = e.target;
-  //   setFormData({ ...formData, [name]: value });
-
-  //   // Real-time validation
-  //   validateField(name, value);
-  // };
    // Function to validate email format
    const validateEmail = (email) => {
     if (!email.trim()) {
@@ -110,14 +119,25 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     return '';
   };
 
+
+  
   const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
+    
     if (name === 'email') {
       validateEmail(value); // Validate email format on email input change
     }
     validateField(name, value);
   };
  
+  // Function to handle textarea resize
+  const handleTextareaResize = (newHeight) => {
+    setFormData(prevData => ({
+        ...prevData,
+        textareaHeight: `${newHeight}px` // Update textareaHeight based on new height
+    }));
+  };
+
   const validateField = (name, value) => {
     let errors = { ...formErrors };
 
@@ -174,6 +194,8 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     // console.log(formLines);
   }, [formLines]); // Add formLines as a dependency to useEffect
 
+
+console.log(formData);
   // Handle submit change
   const handleSubmit = async (event) => {
     if (event) {
@@ -194,14 +216,13 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     if(!nom_societe || !email || !telephone ){
       setFormErrors({
         nom_societe: !nom_societe ? "Nom de société est requis" : "",
-        // email: !email ? "Adresse e-mail est requis" : "",
-
+        email: !email ? "Adresse e-mail est requis" : "",
         telephone: !telephone ? 'Numéro de téléphone est requis' : '',
       });
     } else {
       setFormErrors({
         nom_societe: !nom_societe,
-        // email: !email,
+        email: !email,
         telephone: !telephone
       })
       axios
@@ -217,7 +238,7 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
           navigate('/');
       })
       .catch(error => {
-        console.error("Il y a eu une erreur lors de la soumission du formulaire !", error);
+        console.error("Il y a eu une erreur lors de la soumission du formulaire :", error);
       });
     }
   };
@@ -300,15 +321,16 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
             value={formData.numero_siret}
             onChange={handleInputChange}
           />
-        
-
-        <TextArea
-          label="Observations"
-          name="observations"
-          value={formData.observations}
-          onChange={handleInputChange}
-          height={formData.textareaHeight}
-        />
+      
+          <TextArea
+            label="Observations"
+            name="observations"
+            value={formData.observations}
+            onChange={handleInputChange}
+            height={formData.textareaHeight}
+            handleResize={handleTextareaResize} // Pass handleResize function to TextArea
+            
+          />
 
         <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
           

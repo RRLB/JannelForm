@@ -74,21 +74,21 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
       numero_siret: queryParameters.get('numero_siret') || '',
       observations: queryParameters.get('custom_t10') || '',
       formLines: [
-        // {
-        //   compagnie: compagnie,
-        //   numero_contrat: numeroContrat,
-        //   type_contrat: typeContrat,
-        // }
+        {
+          compagnie: compagnie,
+          numero_contrat: numeroContrat,
+          type_contrat: typeContrat,
+        }
       ],
     }));
     // Set the state
-    // setFormLines([  // Update with an array
-    //   {
-    //     compagnie: compagnie,
-    //     numero_contrat: numeroContrat,
-    //     type_contrat: typeContrat,
-    //   }
-    // ]);
+    setFormLines([  // Update with an array
+      {
+        compagnie: compagnie,
+        numero_contrat: numeroContrat,
+        type_contrat: typeContrat,
+      }
+    ]);
   };
 
   // useEffect to call setInitialInputValues on component mount and when searchParams changes

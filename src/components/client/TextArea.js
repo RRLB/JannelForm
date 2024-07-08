@@ -1,6 +1,6 @@
 ﻿import React, { useRef } from 'react';
 
-const TextArea = ({ label, name, value, onChange, height }) => {
+const TextArea = ({ label, name, value, onChange, height, handleResize }) => {
     const textareaRef = useRef(null);
 
     // Function to handle text area resizing
@@ -9,6 +9,7 @@ const TextArea = ({ label, name, value, onChange, height }) => {
         if (textarea) {
             textarea.style.height = 'auto';
             textarea.style.height = `${textarea.scrollHeight}px`;
+            handleResize(textarea.scrollHeight);
         }
     };
 
@@ -16,6 +17,7 @@ const TextArea = ({ label, name, value, onChange, height }) => {
     const handleChange = (e) => {
         onChange(name, e.target.value); // Ensure correct parameters are passed
         autoResize(); // Resize textarea as text input changes
+        
     };
 
     return (
