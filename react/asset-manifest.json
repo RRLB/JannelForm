@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/jannel/_ClientSpecific/41543/react/static/css/main.1f308576.css",
-    "main.js": "/jannel/_ClientSpecific/41543/react/static/js/main.fb3044e1.js",
-    "static/js/787.8122ecf0.chunk.js": "/jannel/_ClientSpecific/41543/react/static/js/787.8122ecf0.chunk.js",
+    "main.css": "/jannel/_ClientSpecific/41543/react/static/css/main.ff115614.css",
+    "main.js": "/jannel/_ClientSpecific/41543/react/static/js/main.3ed1a8e3.js",
+    "static/js/453.ffc87790.chunk.js": "/jannel/_ClientSpecific/41543/react/static/js/453.ffc87790.chunk.js",
     "index.html": "/jannel/_ClientSpecific/41543/react/index.html",
-    "main.1f308576.css.map": "/jannel/_ClientSpecific/41543/react/static/css/main.1f308576.css.map",
-    "main.fb3044e1.js.map": "/jannel/_ClientSpecific/41543/react/static/js/main.fb3044e1.js.map",
-    "787.8122ecf0.chunk.js.map": "/jannel/_ClientSpecific/41543/react/static/js/787.8122ecf0.chunk.js.map"
+    "main.ff115614.css.map": "/jannel/_ClientSpecific/41543/react/static/css/main.ff115614.css.map",
+    "main.3ed1a8e3.js.map": "/jannel/_ClientSpecific/41543/react/static/js/main.3ed1a8e3.js.map",
+    "453.ffc87790.chunk.js.map": "/jannel/_ClientSpecific/41543/react/static/js/453.ffc87790.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.1f308576.css",
-    "static/js/main.fb3044e1.js"
+    "static/css/main.ff115614.css",
+    "static/js/main.3ed1a8e3.js"
   ]
 }

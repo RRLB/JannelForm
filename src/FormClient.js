@@ -5,6 +5,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link, useNavigate} from 'react-router-dom';
 import DropdownMenu from './components/DropdownMenu';  // Import component
+import TextInput from './components/client/TextInput';
+import TextArea from './components/client/TextArea';
+import { isValidPhoneNumber } from 'react-phone-number-input';
+import EmailInput from './components/client/EmailInput';
+import DOBInput from './components/client/DOBInput';
+import ContractLineInput from './components/client/ContractLineInput';
+import ContractLinesTable from './components/client/ContractLinesTable';
+import moment from 'moment-timezone';
+
+
 
 
 const FormClient = ({ onFormSubmissionSuccess }) => {
@@ -25,21 +35,23 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     formLines: [],
     
   });
-  const textareaRef = useRef(null);
   const [formLines, setFormLines] = useState([]);
   const [newLine, setNewLine] = useState({
     compagnie: '',
     numero_contrat: '',
     type_contrat: '',
   });
-  const [formError, setFormError] = useState({
+  const [formErrors, setFormErrors] = useState({
     nom: false,
     prenom: false,
+    date_naissance: false,
     telephone: false,
     email: false
   });
  
-
+  const [isValidEmail, setIsValidEmail] = useState(true); // State for email format validation
+  const [isValidDOB, setIsValidDOB] = useState(true); // State for email format validation
+  const navigate = useNavigate();
 
   // Log all query parameters
   //These are both the same
@@ -50,9 +62,7 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   //This is the JS function //run with this code in useEffect hook: queryParameters.forEach((value, key) => {console.log(`${key}: ${value}`);
   //Then return : let custom_t1 = queryParameters.get('custom_t1');
   const queryParameters = new URLSearchParams(window.location.search);
-  // console.log(queryParameters); //returns values
   let ResId = queryParameters.get('resId');
-  // console.log(ResId);
 
   //Set initial input values from params
   const setInitialInputValues = (queryParameters) => {
@@ -100,15 +110,68 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   useEffect(() => {
     setInitialInputValues(queryParameters);
     queryParameters.forEach((value, key) => {
-      // console.log(`${key}: ${value}`);
+      console.log(`${key}: ${value}`);
     });
   }, []);
-  // console.log(formData);
-  // console.log(formLines);
-  // Handle input change
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+ 
+   // Function to validate email format
+   const validateEmail = (email) => {
+    if (!email.trim()) {
+      return 'Adresse e-mail est requise';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return 'Adresse e-mail invalide';
+    }
+    return '';
+  };
+  // const validateDOB = (dob) => {
+  //   console.log(dob);
+  //   if (!dob.trim()) {
+  //     return 'Date de naissance est requise';
+  //   } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+  //     return 'Format de date invalide (utilisez jj/mm/aaaa)';
+  //   }
+  
+  //   const [day, month, year] = dob.split('/');
+  //   const isoDate = `${year}-${month}-${day}`;
+  //   if (!moment(isoDate, 'YYYY-MM-DD', true).isValid()) {
+  //     return 'Date de naissance invalide';
+  //   }
+  
+  //   return '';
+  // };
+
+  const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
+    if (name === 'email') {
+      validateEmail(value); // Validate email format on email input change
+    }
+    // if (name === 'date_naissance') {
+    //   validateDOB(value); // Validate email format on email input change
+    // }
+    validateField(name, value);
+  };
+
+  const validateField = (name, value) => {
+    let errors = { ...formErrors };
+
+    switch (name) {
+      case 'nom':
+        errors.nom = !value.trim() ? 'Nom est requis' : '';
+        break;
+      case 'prenom':
+        errors.prenom = !value.trim() ? 'Prénom est requis' : '';
+        break;
+      case 'email':
+        errors.email = validateEmail(value);
+        break;
+      case 'telephone':
+        errors.telephone = !isValidPhoneNumber(value) ? 'Numéro de téléphone invalide' : '';
+        break;
+      default:
+        break;
+    }
+
+    setFormErrors(errors);
   };
 
   const handleAddLine = () => {
@@ -145,27 +208,28 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     // console.log(formLines);
   }, [formLines]); // Add formLines as a dependency to useEffect
    
-  //auto Resize Text Box to fit length of text
-  const autoResize = (event) => {
-    const textarea = event.target;
-    textarea.style.height = 'auto'; //reset the height
-    textarea.style.height = `${textarea.scrollHeight}px`; //set the height to the scroll height
-    setFormData({ ...formData, textareaHeight: `${textarea.scrollHeight}px`, observations: textarea.value });
-  };
-// console.log(formData);
-  //Navigate to homepage
-  const navigate = useNavigate();
+ 
   // Handle submit change
   const handleSubmit = async (event) => {
     if (event) {
       event.preventDefault();
     }
+     // Validate all fields before submission
+     const fields = ['nom_societe', 'email', 'telephone'];
+     let errors = { ...formErrors };
+ 
+     fields.forEach(field => {
+       validateField(field, formData[field]);
+     });
+ 
+     setFormErrors(errors);
+     console.log(errors);
     // console.log("Form Data:", formData);
     const { nom, prenom, email, telephone } = formData; // Destructure nom and email from formData
     
     if(!nom || !prenom || !email || !telephone){
       // console.log(formError);
-      setFormError({
+      setFormErrors({
         nom: !nom,
         prenom: !prenom,
         telephone: !telephone,
@@ -176,7 +240,7 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       // console.log(formError);
       // console.log(formData);
       
-      setFormError({
+      setFormErrors({
         nom: !nom,
         prenom: !prenom,
         telephone: !telephone,
@@ -185,19 +249,16 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
       axios.post("https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
       formData, { crossdomain: true, headers: {'Form': 'Client', 'ResId': ResId } })
       .then(res=>{
-        
-        // console.log(res.data);
         //send response to editForm.js
         if (onFormSubmissionSuccess) {
           onFormSubmissionSuccess();
         }
-        // console.log("Navigating...");
         // Redirect to homepage
         navigate('/');
       })
       .catch(error => {
         // Handle any errors if the request fails
-        console.error("An error occurred:", error);
+        console.error("Il y a eu une erreur lors de la soumission du formulaire :", error);
       });
     }
   };
@@ -207,7 +268,6 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
     await handleSubmit(event)
   }
 
-  const errorMessage = "Ce champs est obligatoire";
       
 return (
 
@@ -221,176 +281,101 @@ return (
 
         <div className="row">
 
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Nom *</label>
-            <input
-            className="form-control" placeholder="nom" id="inputDefault"
-              type="text"
+            <TextInput
+              label="Nom"
               name="nom"
               value={formData.nom}
               onChange={handleInputChange}
-              required
+              required={true}
+              error={formErrors.nom} 
             />
-            {formError.nom && <div className="alert alert-danger" style={{fontSize: '12px'}}>{errorMessage}</div>}
-          </div>
-
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Prénom *</label>
-            <input
-              className="form-control" placeholder="prénom" id="inputDefault"
-              type="text"
+            <TextInput
+              label="Prénom"
               name="prenom"
               value={formData.prenom}
               onChange={handleInputChange}
-              required
+              required={true}
+              error={formErrors.prenom} 
             />
-            {formError.prenom && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
-          </div>
-
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Date de naissance</label>
-            <input
-              className="form-control" placeholder="date de naissance" id="inputDefault"
-              type="text"
+            <DOBInput
+              label="Date de Naissance"
               name="date_naissance"
               value={formData.date_naissance}
               onChange={handleInputChange}
+              // required={true}
+              // error={formErrors.date_naissance}
             />
-          </div>
-
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Adresse</label>
-            <input
-              className="form-control" placeholder="adresse" id="inputDefault"
-              type="text"
+            <TextInput
+              label="Adresse"
               name="adresse"
               value={formData.adresse}
               onChange={handleInputChange}
             />
-          </div>
-
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Code postal</label>
-            <input
-              className="form-control" placeholder="code postal" id="inputDefault"
-              type="text"
+            <TextInput
+              label="Code postal"
               name="code_postal"
               value={formData.code_postal}
               onChange={handleInputChange}
             />
-          </div>
-
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Ville</label>
-            <input
-              className="form-control" placeholder="ville" id="inputDefault"
-              type="text"
+            <TextInput
+              label="Ville"
               name="ville"
               value={formData.ville}
               onChange={handleInputChange}
             />
-          </div>
-
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Téléphone *</label>
-            <input
-              className="form-control" placeholder="téléphone" id="inputDefault"
-              type="text"
+            <TextInput
+              label="Téléphone"
               name="telephone"
               value={formData.telephone}
               onChange={handleInputChange}
-              require
+              required={true}
+              error={formErrors.telephone} 
             />
-            {formError.telephone && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
-          </div>
-
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Email *</label>
-            <input
-              className="form-control" placeholder="email" id="inputDefault"
-              type="email"
+            <EmailInput
+              label="Email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              required
-              
+              required={true}
+              error={formErrors.email}
             />
-            {formError.email && <div className="alert alert-danger"style={{fontSize: '12px'}}>{errorMessage}</div>}
-          </div>
-
-          <div className="form-group col-sm-12 col-md-6 col-lg-4">
-            <label className="col-form-label">Profession</label>
-            <input
-              className="form-control" placeholder="profession" id="inputDefault"
-              type="text"
+            <TextInput
+              label="Profession"
               name="profession"
               value={formData.profession}
               onChange={handleInputChange}
             />
-          </div>
-
-          <div className="form-group col-sm-12 ">
-            <label className="col-form-label" >Observations</label>
-            <textarea
-              placeholder="texte..."
-              rows="1"
-              className="form-control" 
-              id="exampleTextarea"
-              type="text"
+            <TextArea
+              label="Observations"
               name="observations"
               value={formData.observations}
-              onChange={(e) =>{ handleInputChange(e); autoResize(e); }}
-              onInput={autoResize}
-              ref={textareaRef}
-              style={{ height: formData.textareaHeight }} // Apply the dynamic height
-            ></textarea>
-          </div>
+              onChange={handleInputChange}
+              height={formData.textareaHeight}
+            />
 
           <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
           <DropdownMenu  newLine={newLine} setNewLine={setNewLine} setFormLines={setFormLines} formType="client"/>
           
-
-          <div className='contract addNew'>
-            <button onClick={handleAddLine} className="btn btn-light" type="submit">Rajouté</button>
-          </div>
-
-          <div className='formLines'>
-          
-            {formLines.length > 0 && (
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th scope="col">Compagnie</th>
-                    <th scope="col">Numéro de contrat</th>
-                    <th scope="col">Type de contrat</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {formLines.map((line, index) => (
-                    <tr key={index}>
-                      <td>{Array.isArray(line.compagnie) ? line.compagnie.join(', ').toUpperCase() : line.compagnie.toUpperCase()}</td>
-                      <td>{Array.isArray(line.numero_contrat) ? line.numero_contrat.join(', ').toUpperCase() : line.numero_contrat.toUpperCase()}</td>
-                      <td>{Array.isArray(line.type_contrat) ? line.type_contrat.join(', ').toUpperCase() : line.type_contrat.toUpperCase()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-          
+          <ContractLineInput
+          newLine={newLine}
+          setNewLine={setNewLine}
+          handleAddLine={handleAddLine}
+        />
+        
+        <ContractLinesTable formLines={formLines} />
         </div>
+
         <div className="btn-group ">
           <div >
             <Link role="button" to={ `/` } >
               <button type="button" className="back btn btn-secondary" >Retour</button>
             </Link>
           </div>
-
           <div >
             <button onClick={(event) => handleOnClickClose(event)} className=" btn btn-primary " type="submit">Valider</button>
           </div>
         </div>
-        
+
       </div>
     </div>
   </div>
