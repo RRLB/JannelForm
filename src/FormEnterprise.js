@@ -1,140 +1,169 @@
-import './App.css';
-import React, { useEffect, useRef, useState } from 'react';
-import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
-import TextInput from './components/enterprise/TextInput';
-import TextArea from './components/enterprise/TextArea';
-import ContractLineInput from './components/enterprise/ContractLineInput';
-import ContractLinesTable from './components/enterprise/ContractLinesTable';
-import DropdownMenu from './components/DropdownMenu';  // Import component
-import { isValidPhoneNumber } from 'react-phone-number-input';
-import EmailInput from './components/enterprise/EmailInput'; //
+import "./App.css";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
+import TextInput from "./components/enterprise/TextInput";
+import TextArea from "./components/enterprise/TextArea";
+import ContractLineInput from "./components/enterprise/ContractLineInput";
+import ContractLinesTable from "./components/enterprise/ContractLinesTable";
+import DropdownMenu from "./components/DropdownMenu";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import EmailInput from "./components/enterprise/EmailInput";
 
 const FormEnterprise = ({ onFormSubmissionSuccess }) => {
-  //define state variables for each form field
   const [formData, setFormData] = useState({
-    // enterprise: 'enterprise',
-    nom_societe: '',
-    nom_gerant: '',
-    adresse: '',
-    code_postal: '',
-    ville: '',
-    forme_juridique: '',
-    email: '',
-    telephone: '',
-    numero_siret: '',
-    observations: '',
-    textareaHeight: 'auto',
+    nom_societe: "",
+    nom_gerant: "",
+    adresse: "",
+    code_postal: "",
+    ville: "",
+    forme_juridique: "",
+    email: "",
+    telephone: "",
+    numero_siret: "",
+    observations: "",
+    textareaHeight: "auto",
     formLines: [],
-    
   });
- 
-  const [formLines, setFormLines] = useState([]);
+
   const [newLine, setNewLine] = useState({
-    compagnie: '',
-    numero_contrat: '',
-    type_contrat: '',
+    compagnie: "",
+    numero_contrat: "",
+    type_contrat: "",
   });
+
   const [formErrors, setFormErrors] = useState({
     nom_societe: false,
     email: false,
-    telephone: false
+    telephone: false,
   });
 
   const navigate = useNavigate();
 
-  // Log all query parameters
-  //These are both the same
-  //This uses React hook which has the below function built in. it returns an object of params
-  //get values by accessing the objkect values => const custom_t1 = queryParameters.custom_t1;
-  // const queryParameters = useParams()
-  // console.log(queryParameters); //return null
-  //This is the JS function //run with this code in useEffect hook: queryParameters.forEach((value, key) => {console.log(`${key}: ${value}`);
-  //Then return : let custom_t1 = queryParameters.get('custom_t1');
-
   const queryParameters = new URLSearchParams(window.location.search);
-  let ResId = queryParameters.get('resId');
+  let ResId = queryParameters.get("resId");
+  // let docDbId = queryParameters.get("docDbId");
   
-  //Set initial input values from params
+  
+ // Get the contractLines parameter from the query parameters
+  let encodecontractLines = queryParameters.get("contractLines") || "";
+  console.log(encodecontractLines);
+  // let encodecontractLines = {"compagnie":"[\"afer\",\"aig\",\"swiss_life\",[\"aig\"]]","numero_contrat":"[\"rr5565\",\"ezrzer\",\"FR029956TT\",\"TT51523EAX\"]","type_contrat":"[\"flotte_auto\",\"mri\",\"pjpro\",[\"flotte_auto\"]]"}
+  
+  // Initialize contractLines with a default empty object if parsing fails
+  let contractLines = {};
+  let docDbId = "";
+  // Check if the contractLines parameter exists and is valid
+  if (encodecontractLines) {
+    try {
+      contractLines = JSON.parse(decodeURIComponent(encodecontractLines));
+      docDbId = JSON.parse(contractLines.id_increment) || "";
+      console.log(docDbId);
+    } catch (error) {
+      console.error("Error parsing contractLines:", error);
+      // If parsing fails, contractLines remains an empty object
+    }
+  }
+  
+  // contractLines = {compagnie: '["afer","aig","swiss_life",["aig"]]', numero_contrat: '["rr5565","ezrzer","FR029956TT","TT51523EAX"]', type_contrat: '["flotte_auto","mri","pjpro",["flotte_auto"]]'}
+  console.log("Parsed contractLines:", contractLines);
+//{compagnie: '["afer","aig","swiss_life",["aig"]]', numero_contrat: '["rr5565","ezrzer","FR029956TT","TT51523EAX"]', type_contrat: '["flotte_auto","mri","pjpro",["flotte_auto"]]'}
+  
+  // reset values in arrays
+  function resetLinesIntoArrays(lineData) {
+    let lineObject = {
+      compagnie: [],
+      numero_contrat: [],
+      type_contrat: []
+    };
+  console.log("LINE DATA", lineData);
+    // Process each property in lineData
+    for (const key in lineData) {
+      // console.log("KEY", key);
+      if (lineData.hasOwnProperty(key)) {
+        let nestedArray = [];
+        let parsedArray = JSON.parse(lineData[key]);
+        for (let i = 0; i < parsedArray.length; i++) {
+          if (!Array.isArray(parsedArray[i]) && key != "numero_contrat") {
+            nestedArray.push([parsedArray[i]]);
+          } else {
+            nestedArray.push(parsedArray[i]);
+          }
+        }
+        
+        lineObject[key] = nestedArray;
+      }
+      
+    }
+    return lineObject;
+  }
+
+  let formLinesArray = [];
+  if(contractLines.compagnie || contractLines.numero_contrat || contractLines.type_contrat){
+    // contractLines.compagnie = JSON.parse(contractLines.compagnie);
+    let nestedContractLines = resetLinesIntoArrays(contractLines);
+    console.log("Nested Contract Lines:", nestedContractLines);
+
+    // Map over the transformed data to create formLinesArray
+    formLinesArray = nestedContractLines.compagnie.map((compagnieArray, index) => ({
+      compagnie: compagnieArray[0],  // Each compagnie is nested in its own array
+      numero_contrat: nestedContractLines.numero_contrat[index],  // This one doesn't need nesting
+      type_contrat: nestedContractLines.type_contrat[index][0],  // Each type_contrat is nested in its own array
+    }));
+    console.log("Form Lines Array:", formLinesArray);
+  }
   const setInitialInputValues = (queryParameters) => {
-      // Extracting lines from pdf = comma-separated strings and converting them to uppercase
-      const compagnies = (queryParameters.get('custom_n7') || '').split(',');
-      const numeroContrats = (queryParameters.get('custom_t5') || '').split(',');
-      const typeContrats = (queryParameters.get('custom_n1') || '').split(',');
-
-      const formLinesArray = compagnies.map((compagnie, index) => ({
-        compagnie: compagnie.trim(),
-        numero_contrat: numeroContrats[index] ? numeroContrats[index].trim() : '', // Ensure to check if value exists
-        type_contrat: typeContrats[index] ? typeContrats[index].trim() : '', // Ensure to check if value exists
-      }));
-
     setFormData((prevData) => ({
       ...prevData,
-      nom_societe: queryParameters.get('custom_t15') || '',
-      nom_gerant: queryParameters.get('custom_t1') || '',
-      adresse: queryParameters.get('custom_t2') || '',
-      code_postal: queryParameters.get('custom_t3') || '',
-      ville: queryParameters.get('custom_t6') || '',
-      forme_juridique: queryParameters.get('custom_t16') || '',
-      email: queryParameters.get('custom_t8') || '',
-      telephone: queryParameters.get('custom_t7') || '',
-      numero_siret: queryParameters.get('custom_t14') || '',
-      observations: queryParameters.get('custom_t10') || '',
-      formLines: formLinesArray,
-      // formLines: [
-        // form lines cannot be passed in as parameters as compagnie and type contract are liste deroulante with fixed values
-        // so if there are 3 lines : Sampo/Sampo/Axa the params will be : Sampo/Axa
-        // {
-          // compagnie: queryParameters.get('custom_tcustom_n710') || '',
-          // numero_contrat: queryParameters.get('custom_t5') || '',
-          // type_contrat: queryParameters.get('custom_n1') || '',
-        // }
-      // ],
+      nom_societe: queryParameters.get("custom_t15") || "",
+      nom_gerant: queryParameters.get("custom_t1") || "",
+      adresse: queryParameters.get("custom_t2") || "",
+      code_postal: queryParameters.get("custom_t3") || "",
+      ville: queryParameters.get("custom_t6") || "",
+      forme_juridique: queryParameters.get("custom_t16") || "",
+      email: queryParameters.get("custom_t8") || "",
+      telephone: queryParameters.get("custom_t7") || "",
+      numero_siret: queryParameters.get("custom_t14") || "",
+      observations: queryParameters.get("custom_t10") || "",
+      formLines: formLinesArray || "",
     }));
-    // setFormLines([  // Update with an array
-    //   {
-    //     compagnie: queryParameters.get('custom_n7') || '',
-    //       numero_contrat: queryParameters.get('custom_t5') || '',
-    //       type_contrat: queryParameters.get('custom_n1') || '',
-    //   }
-    // ]);
-    console.log(formLinesArray)
   };
 
-  // useEffect to call setInitialInputValues on component mount and when searchParams changes
   useEffect(() => {
-    setInitialInputValues(queryParameters,);
+    setInitialInputValues(queryParameters);
     queryParameters.forEach((value, key) => {
       console.log(`${key}: ${value}`);
     });
   }, []);
-
-   // Function to validate email format
-   const validateEmail = (email) => {
+//auto Resize Text Box to fit length of text
+const autoResize = (event) => {
+  const textarea = event.target;
+  textarea.style.height = 'auto'; //reset the height
+  textarea.style.height = `${textarea.scrollHeight}px`; //set the height to the scroll height
+  setFormData({ ...formData, textareaHeight: `${textarea.scrollHeight}px`, observations: textarea.value });
+};
+  const validateEmail = (email) => {
     if (!email.trim()) {
-      return 'Adresse e-mail est requise';
+      return "Adresse e-mail est requise";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return 'Adresse e-mail invalide';
+      return "Adresse e-mail invalide";
     }
-    return '';
+    return "";
   };
 
-
-  
   const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
-    
-    if (name === 'email') {
-      validateEmail(value); // Validate email format on email input change
+
+    if (name === "email") {
+      validateEmail(value);
     }
     validateField(name, value);
   };
- 
-  // Function to handle textarea resize
+
   const handleTextareaResize = (newHeight) => {
-    setFormData(prevData => ({
-        ...prevData,
-        textareaHeight: `${newHeight}px` // Update textareaHeight based on new height
+    setFormData((prevData) => ({
+      ...prevData,
+      textareaHeight: `${newHeight}px`,
     }));
   };
 
@@ -142,18 +171,17 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     let errors = { ...formErrors };
 
     switch (name) {
-      case 'nom_societe':
-        errors.nom_societe = !value.trim() ? 'Nom de société est requis' : '';
+      case "nom_societe":
+        errors.nom_societe = !value.trim() ? "Nom de société est requis" : "";
         break;
-      case 'email':
+      case "email":
         errors.email = validateEmail(value);
         break;
-      case 'telephone':
-        errors.telephone = !isValidPhoneNumber(value) ? 'Numéro de téléphone invalide' : '';
+      case "telephone":
+        errors.telephone = !isValidPhoneNumber(value)
+          ? "Numéro de téléphone invalide"
+          : "";
         break;
-      // case 'date_naissance':
-      //    errors.date_naissance = !/^\d{2}\/\d{2}\/\d{4}$/.test(value) ? 'Date invalide. Utilisez le format JJ/MM/AAAA.' : '';
-      //   break;
       default:
         break;
     }
@@ -161,140 +189,136 @@ const FormEnterprise = ({ onFormSubmissionSuccess }) => {
     setFormErrors(errors);
   };
 
-  const handleAddLine = () => {
-    // Create a new line using the current state of newLine
-    const lineToAdd = {
-      compagnie: newLine.compagnie,
-      numero_contrat: newLine.numero_contrat,
-      type_contrat: newLine.type_contrat,
-    };
-
-    // Update formLines in formData using the callback function
+  const handleDeleteLine = (index) => {
     setFormData((prevData) => {
-      const updatedFormLines = [...prevData.formLines, lineToAdd];
-      // console.log(updatedFormLines); // Log the updated formLines
+      const updatedFormLines = prevData.formLines.filter((_, i) => i !== index);
+      console.log(updatedFormLines);
       return {
         ...prevData,
         formLines: updatedFormLines,
       };
     });
-    // Use setFormLines to update the formLines state
-    setFormLines((prevLines) => [...prevLines, lineToAdd]);
+  };
+
+  const handleAddLine = (line) => {
+    setFormData((prevData) => {
+      // Ensure prevData.formLines is an array
+      const currentLines = Array.isArray(prevData.formLines) ? prevData.formLines : [];
+      console.log(currentLines);
+      return {
+        ...prevData,
+        formLines: [...currentLines, line],
+      };
+    });
 
     // Clear the newLine state for the next line
     setNewLine({
-      compagnie: '',
-      numero_contrat: '',
-      type_contrat: '',
+      compagnie: "",
+      numero_contrat: "",
+      type_contrat: "",
     });
   };
+ 
 
-  useEffect(() => {
-    // Log the formLines state after it has been updated
-    // console.log(formLines);
-  }, [formLines]); // Add formLines as a dependency to useEffect
-
-
-console.log(formData);
-  // Handle submit change
   const handleSubmit = async (event) => {
     if (event) {
       event.preventDefault();
     }
-    // Validate all fields before submission
-    const fields = ['nom_societe', 'email', 'telephone'];
+
+    const fields = ["nom_societe", "email", "telephone"];
     let errors = { ...formErrors };
 
-    fields.forEach(field => {
+    fields.forEach((field) => {
       validateField(field, formData[field]);
     });
 
     setFormErrors(errors);
-    console.log(errors);
-    
-    const { nom_societe, email, telephone } = formData; // Destructure nom and email from formData
-    if(!nom_societe || !email || !telephone ){
+
+    const { nom_societe, email, telephone } = formData;
+    if (!nom_societe || !email || !telephone) {
       setFormErrors({
         nom_societe: !nom_societe ? "Nom de société est requis" : "",
         email: !email ? "Adresse e-mail est requis" : "",
-        telephone: !telephone ? 'Numéro de téléphone est requis' : '',
+        telephone: !telephone ? "Numéro de téléphone est requis" : "",
       });
     } else {
       setFormErrors({
         nom_societe: !nom_societe,
         email: !email,
-        telephone: !telephone
-      })
+        telephone: !telephone,
+      });
       axios
         .post(
-          "https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php", 
-          formData, 
-          { crossdomain: true, headers: {'Form': 'Entreprise', 'ResId': ResId} }
+          "https://armoires.zeendoc.com/jannel/_ClientSpecific/41543/index.php",
+          formData,
+          { crossdomain: true, headers: { Form: "Entreprise ", ResId: ResId, docDbId: docDbId } }
         )
-        .then(res => {
+        .then((res) => {
           if (onFormSubmissionSuccess) {
             onFormSubmissionSuccess();
           }
-          navigate('/');
-      })
-      .catch(error => {
-        console.error("Il y a eu une erreur lors de la soumission du formulaire :", error);
-      });
+          navigate("/");
+        })
+        .catch((error) => {
+          console.error(
+            "Il y a eu une erreur lors de la soumission du formulaire :",
+            error
+          );
+        });
     }
   };
 
   const handleOnClickClose = async (event) => {
-    const handleForm = await handleSubmit(event)
-  }
+    await handleSubmit(event);
+  };
 
   return (
-    <div className="Form form-group"> 
-        <h1>Formulaire fiche entreprise</h1>
-      
-      <div className="FormEnterprise" >
-        <div className="row">
+    <div className="Form form-group">
+      <h1>Formulaire fiche entreprise</h1>
 
-          <TextInput 
+      <div className="FormEnterprise">
+        <div className="row">
+          <TextInput
             label="Nom société"
-            name='nom_societe'
-            value={formData.nom_societe} 
+            name="nom_societe"
+            value={formData.nom_societe}
             onChange={handleInputChange}
             required={true}
-            error={formErrors.nom_societe} 
+            error={formErrors.nom_societe}
           />
 
-          <TextInput 
+          <TextInput
             label="Nom du gérant"
-            name='nom_gerant'
-            value={formData.nom_gerant} 
+            name="nom_gerant"
+            value={formData.nom_gerant}
             onChange={handleInputChange}
           />
-        
-          <TextInput 
-            label="Adresse" 
-            name='adresse'
-            value={formData.adresse} 
+
+          <TextInput
+            label="Adresse"
+            name="adresse"
+            value={formData.adresse}
             onChange={handleInputChange}
           />
-          
+
           <TextInput
             label="Code postal"
             name="code_postal"
             value={formData.code_postal}
             onChange={handleInputChange}
           />
-          
+
           <TextInput
             label="Ville"
             name="ville"
             value={formData.ville}
             onChange={handleInputChange}
           />
-          
-          <TextInput 
-            label="Forme Juridique" 
-            name='forme_juridique'
-            value={formData.forme_juridique} 
+
+          <TextInput
+            label="Forme Juridique"
+            name="forme_juridique"
+            value={formData.forme_juridique}
             onChange={handleInputChange}
           />
 
@@ -313,55 +337,61 @@ console.log(formData);
             value={formData.telephone}
             onChange={handleInputChange}
             required={true}
-            error={formErrors.telephone }
+            error={formErrors.telephone}
           />
+
           <TextInput
             label="Numéro Siret"
             name="numero_siret"
             value={formData.numero_siret}
             onChange={handleInputChange}
           />
-      
+
           <TextArea
             label="Observations"
             name="observations"
             value={formData.observations}
             onChange={handleInputChange}
             height={formData.textareaHeight}
-            handleResize={handleTextareaResize} // Pass handleResize function to TextArea
-            
+            handleResize={handleTextareaResize} 
+            // onResize={handleTextareaResize}
+            // textareaHeight={formData.textareaHeight}
           />
 
-        <h2 className="contract" style={{ marginTop : 40, marginBottom : 0, paddingTop : 10 }} >Contrats</h2>
-          
-        <DropdownMenu newLine={newLine} setNewLine={setNewLine} setFormLines={setFormLines} formType="enterprise"/>
+          <DropdownMenu newLine={newLine} setNewLine={setNewLine} formType="enterprise"/>
 
-        <ContractLineInput
-          newLine={newLine}
-          setNewLine={setNewLine}
-          handleAddLine={handleAddLine}
-        />
-        
-        <ContractLinesTable formLines={formLines} />
+          <ContractLineInput
+            newLine={newLine}
+            setNewLine={setNewLine}
+            handleAddLine={handleAddLine}
+          />
 
+          <ContractLinesTable
+            formLines={formData.formLines}
+            handleDeleteLine={handleDeleteLine}
+          />
         </div>
 
         <div className="btn-group ">
-          <div >
-            <Link role="button" to={ `/` } >
-              <button  className="back btn btn-secondary" >Retour</button>
+          <div>
+            <Link role="button" to={`/`}>
+              <button className="back btn btn-secondary">Retour</button>
             </Link>
           </div>
 
-          <div >
-            <button onClick={(event) => handleOnClickClose(event)} className=" btn btn-primary " type="submit">Valider</button>
+          <div>
+            <button
+              onClick={(event) => handleOnClickClose(event)}
+              className="btn btn-primary"
+              type="submit"
+            >
+              Valider
+            </button>
           </div>
         </div>
       </div>
     </div>
-  
-  
   );
-}
+};
 
 export default FormEnterprise;

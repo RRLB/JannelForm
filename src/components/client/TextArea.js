@@ -25,7 +25,7 @@ const TextArea = ({ label, name, value, onChange, height, handleResize }) => {
             <label className="col-form-control">{label}</label>
             <textarea
                 placeholder="text..."
-                rows="1" // Initial rows, will adjust dynamically
+                rows="4" // Initial rows, will adjust dynamically
                 className="mainInfo form-control"
                 name={name}
                 value={value}

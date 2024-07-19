@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-const DropdownMenu = ({ newLine, setNewLine, setFormLines, formType }) => {
+const DropdownMenu = ({ newLine, setNewLine, formType }) => {
 
     /* // Test data for contract types
     const testContractTypes = [
