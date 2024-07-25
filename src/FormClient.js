@@ -68,17 +68,29 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
   const parsedDate = dateString ? parseDate(dateString) : "";
 
   // Get the contractLines parameter from the query parameters
-  let encodecontractLines = queryParameters.get("contractLines") || "";
-  console.log(encodecontractLines);
+  let encodecontractLinesString = queryParameters.get("contractLines") || "";
+  // let encodecontractLines = {"id_increment":"2811","compagnie":"{\"3\":\"AXA\"}","numero_contrat":"{\"3\":\"2419941004\"}","type_contrat":"{\"3\":\"AUTO\"}"}
+  console.log("Retrieved contractLines string:", encodecontractLinesString);
 
   // Initialize contractLines with a default empty object if parsing fails
   let contractLines = {};
   let docDbId = "";
-  if (encodecontractLines) {
+  if (encodecontractLinesString) {
     try {
-      contractLines = JSON.parse(decodeURIComponent(encodecontractLines));
-      docDbId = JSON.parse(contractLines.id_increment) || "";
-      console.log(docDbId);
+      // Parse the entire encodecontractLines string first
+      const encodecontractLines = JSON.parse(encodecontractLinesString);
+      console.log("Parsed encodecontractLines:", encodecontractLines);
+
+      // Parse the nested JSON strings within the parsed object
+      contractLines = {
+        id_increment: encodecontractLines.id_increment,
+        compagnie: JSON.parse(encodecontractLines.compagnie),
+        numero_contrat: JSON.parse(encodecontractLines.numero_contrat),
+        type_contrat: JSON.parse(encodecontractLines.type_contrat)
+      };
+      // Extract the id_increment value
+      docDbId = contractLines.id_increment || "";
+      console.log("docDbId:", docDbId);
     } catch (error) {
       console.error("Failed to parse contractLines:", error);
     }
@@ -87,32 +99,37 @@ const FormClient = ({ onFormSubmissionSuccess }) => {
 
   console.log("Parsed contractLines:", contractLines);
 
-  // reset values in arrays
   function resetLinesIntoArrays(lineData) {
     let lineObject = {
       compagnie: [],
       numero_contrat: [],
       type_contrat: [],
     };
+  
     console.log("LINE DATA", lineData);
+    
     // Process each property in lineData
     for (const key in lineData) {
       // console.log("KEY", key);
-
       if (lineData.hasOwnProperty(key)) {
         let nestedArray = [];
-        let parsedArray = JSON.parse(lineData[key]);
+        let parsedData = lineData[key]; // Directly use the parsed object
         
-        for (let i = 0; i < parsedArray.length; i++) {
-          if (!Array.isArray(parsedArray[i]) && key != "numero_contrat") {
-            nestedArray.push([parsedArray[i]]);
-          } else {
-            nestedArray.push(parsedArray[i]);
+        // Iterate over the keys in parsedData
+        for (const subKey in parsedData) {
+          if (parsedData.hasOwnProperty(subKey)) {
+            let value = parsedData[subKey];
+            if (key !== "numero_contrat") {
+              nestedArray.push([value]);
+            } else {
+              nestedArray.push(value);
+            }
           }
         }
         lineObject[key] = nestedArray;
       }
     }
+    
     return lineObject;
   }
 
